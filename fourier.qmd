@@ -1,0 +1,836 @@
+---
+execute:
+    echo: false
+format:
+    html:
+        toc: true
+        toc-depth: 4
+        toc-expand: true
+        toc-title: Contents
+---
+
+## Discrete Fourier transform
+
+Consider a periodic function $u(x)$ with period $L$, and a domain with $N$ points indexed $j=0$ to $j=N-1$. 
+
+![](figs/grid.png){width=400}
+
+We can put sine and cosine waves on this grid. How many waves will fit? That is, what is the highest wavenumber that will fit on the grid? Consider $\cos(2\pi nx/L)$. This function has period $L/n$. When $n=1$, we have a single complete wave on the domain. When $n$ is larger, we have more waves on the grid with smaller wavelengths. The smallest wave that will fit on the grid has a period of twice the grid spacing, or $2\Delta x=2L/N$. But this period is $L/n_\text{max}$, so $n_\text{max}=N/2$. This gives $\cos(2\pi n_\text{max}x/L) = \cos(\pi N x/L)$, shown below.
+
+```{python}
+import numpy as np
+import matplotlib.pyplot as plt
+
+L = 1
+N = 6
+dx = L/N
+j = np.arange(N)
+xj = np.linspace(0,L-dx,N)
+nxx = 1000
+xx = np.linspace(0,L,nxx)
+
+fig,ax=plt.subplots(1,1,figsize=(5,2))
+nmax = N/2
+for x in xj:
+    ax.plot(x,np.cos(2*np.pi*nmax*x/L),'o', ms=5, color='black', mfc='none')
+    ax.plot(x,0,'|', ms=10, color='black', mfc='none')
+ax.plot(xx,np.cos(2*np.pi*nmax*xx/L))
+ax.set_yticks([-1,0,1]);
+
+```
+
+For a sine wave, we have $\sin(2\pi n_\text{max}x/L) = \sin(\pi N x/L)$.
+
+```{python}
+
+fig,ax=plt.subplots(1,1,figsize=(5,2))
+nmax = N/2
+for x in xj:
+    ax.plot(x,np.sin(2*np.pi*nmax*x/L),'o', ms=5, color='black', mfc='none')
+    ax.plot(x,0,'|', ms=10, color='black', mfc='none')
+ax.plot(xx,np.sin(2*np.pi*nmax*xx/L))
+ax.set_yticks([-1,0,1]);
+
+```
+
+Plotting all the cosine and sine waves gives
+```{python}
+
+fig,ax=plt.subplots(2,1,figsize=(5,4.5))
+nmin = 0
+nmax = int(N/2)
+
+ax[0].set_title(r'$\cos(2\pi nx/L)$, $n=0\ldots N/2$')
+for n in range(nmin,nmax+1):
+    for x in xj:
+        ax[0].plot(x,np.cos(2*np.pi*n*x/L),'o', ms=5, color='black', mfc='none')
+        ax[0].plot(x,0,'|', ms=10, color='black', mfc='none')
+    ax[0].plot(xx,np.cos(2*np.pi*n*xx/L))
+ax[0].set_yticks([-1,0,1]);
+ax[0].set_xticks([]);
+
+ax[1].set_title(r'$\sin(2\pi nx/L)$, $n=0\ldots N/2$')
+ax[1].plot(x,0,'|', ms=10, color='black', mfc='none')
+for n in range(nmin,nmax+1):
+    for x in xj:
+        ax[1].plot(x,np.sin(2*np.pi*n*x/L),'o', ms=5, color='black', mfc='none')
+        ax[1].plot(x,0,'|', ms=10, color='black', mfc='none')
+    ax[1].plot(xx,np.sin(2*np.pi*n*xx/L))
+ax[1].set_yticks([-1,0,1]);
+
+```
+
+
+---------------------------
+
+A function $u(x)$ can be written as a linear combination of the sine and cosine basis functions (one for each $n$),
+
+$$u(x) = a_0 + \sum_{n=1}^{N/2}[a_n\cos(2\pi nx/L)) + b_n\sin(2\pi nx/L)].$$ {#eq-cos_sin}
+
+This equation is converted to complex form using the Euler identities
+$$e^{i\theta} = \cos(\theta) + i\sin(\theta),$$
+$$\cos(\theta) = \frac{1}{2}(e^{i\theta} + e^{-i\theta}),$$
+$$\sin(\theta) = \frac{1}{2i}(e^{i\theta} - e^{-i\theta}).$$
+
+![](figs/circle.png){width=400}
+
+Insert these into @eq-cos_sin to give
+
+$$u(x) = a_0 + \sum_{n=1}^{N/2}c_ne^{2\pi inx/L} + \sum_{n=1}^{N/2}k_ne^{-2\pi inx/L},$$ {#eq-e0}
+
+where
+$$c_n = \frac{a_n}{2} + \frac{b_n}{2i} = \frac{a_n}{2} - \frac{b_ni}{2},$$
+$$k_n = \frac{a_n}{2} - \frac{b_n}{2i} = \frac{a_n}{2} + \frac{b_ni}{2}.$$
+
+In the second summation in @eq-e0, if we replace $n$ with $-n$, then the first and second sums are over different ranges of $n$. This allows us to use $c_n$ in both sums, that is, use $c_n$ instead of $k_n$, notationally, in the second sum. Recognizing that, for $n=0$, $a_0=c_ne^{2\pi inx/L}$, we can combine all three terms into one sum from $n=-N/2$ to $n=N/2$: 
+
+$$u(x) = \sum_{n=-N/2}^{N/2}c_ne^{2\pi inx/L}.$$ {#eq-e}
+
+Here, 
+$$
+c_n = \begin{cases}
+a_0 & \text{for } n=0, \\
+a_n/2 + b_ni/2 & \text{for } n<0, \\
+a_n/2 - b_ni/2 & \text{for } n>0.
+\end{cases}
+$$
+
+Note that $e^{2\pi inx/L}$ is point on the unit circle in the complex plane. We can write this as $e^{\theta_xn i}$, where $\theta_x=2\pi x/L$, and is the angle measured from the real line. Corresponding positive and negative values of $n$ will give points on the unit circle with conjugate symmetry. For example, for $x=\Delta x$, we have $e^{2\pi in/N}$, where $\Delta x/L=1/N$. Points on the complex unit circle for $n=-N/2\ldots N/2$ are shown below for $N=6$. 
+
+```{python}
+
+fig, ax = plt.subplots(1,1, figsize=(4,4))
+theta = np.linspace(0,2*np.pi,1000)
+ax.plot(np.cos(theta), np.sin(theta), '-', color='black')
+for n in range(int(-N/2), int(N/2)+1):
+    if n==int(N/2):
+        ax.plot(np.cos(2*np.pi*n/N), np.sin(2*np.pi*n/N), 'o', ms=12, color='black', mfc='none')
+    else:
+        ax.plot(np.cos(2*np.pi*n/N), np.sin(2*np.pi*n/N), 'o', ms=8, color='black')
+
+n = range(int(-N/2), int(N/2)+1)
+i=0; ax.text(np.cos(2*np.pi*n[i]/N)-0.2,  np.sin(2*np.pi*n[i]/N)-0.2,  f'{-3+i}')
+i=1; ax.text(np.cos(2*np.pi*n[i]/N)-0.2,  np.sin(2*np.pi*n[i]/N)-0.2,  f'{-3+i}')
+i=2; ax.text(np.cos(2*np.pi*n[i]/N)-0.1,  np.sin(2*np.pi*n[i]/N)-0.2,  f'{-3+i}')
+i=3; ax.text(np.cos(2*np.pi*n[i]/N)+0.1,  np.sin(2*np.pi*n[i]/N)-0.2,  f'{-3+i}')
+i=4; ax.text(np.cos(2*np.pi*n[i]/N)+0.1,  np.sin(2*np.pi*n[i]/N)+0.1,  f'{-3+i}')
+i=5; ax.text(np.cos(2*np.pi*n[i]/N)-0.1,  np.sin(2*np.pi*n[i]/N)+0.1,  f'{-3+i}')
+i=6; ax.text(np.cos(2*np.pi*n[i]/N)-0.16, np.sin(2*np.pi*n[i]/N)+0.12, f'{-3+i}')
+ax.plot([np.cos(2*np.pi*n[2]/N), np.cos(2*np.pi*n[4]/N)], 
+        [np.sin(2*np.pi*n[2]/N), np.sin(2*np.pi*n[4]/N)], '--', color='gray')
+ax.plot([np.cos(2*np.pi*n[1]/N), np.cos(2*np.pi*n[5]/N)], 
+        [np.sin(2*np.pi*n[1]/N), np.sin(2*np.pi*n[5]/N)], '--', color='gray')
+ax.plot([-1.2,1.2], [0,0], '-', color='black')
+ax.plot([0,0], [-1.2,1.2], '-', color='black')
+ax.set_xlabel('real')
+ax.set_ylabel('imaginary');
+
+```
+
+**Note, this figure represents the basis functions $e^{2\pi inx/L}$ for $x=\Delta x$.** For other $x$ values, the angle stepped from one value of $n$ to the next is proportional to the size of $x$. This is illustrated below for each $x_j=j\Delta x$. The red curve shows the angular size of the step between each $n$ value. The locations of the $n$ indexes are labeled.
+
+```{python}
+#| fig-cap: "Basis function positions for various x locations."
+#| label: fig-basis2
+
+fig, ax = plt.subplots(3,2, figsize=(8,12))
+theta = np.linspace(0,2*np.pi,600)
+
+for i in range(3):
+    for j in range(2):
+        ax[i,j].plot(np.cos(theta), np.sin(theta), '-', color='black')
+        ax[i,j].axis('off')
+        ax[i,j].plot([-1.2,1.2], [0,0], '-', color='black')
+        ax[i,j].plot([0,0], [-1.2,1.2], '-', color='black')
+
+n = range(int(-N/2), int(N/2)+1)
+
+############# x = 0dx
+ix = 0
+i=0; j=0
+ax[i,j].set_title(r'$j=0$')
+for nn in n:
+    ax[i,j].plot(np.cos(2*np.pi*ix*nn/N), 
+                np.sin(2*np.pi*ix*nn/N), 'o', ms=8, color='black')
+xshift = [-0.4, -0.2, -0.0, -0.4, -0.2,  0.0,  0.2]
+yshift = [ 0.2,  0.2,  0.2, -0.3, -0.3, -0.3, -0.3]
+for inn,nn in enumerate(n):
+    ax[i,j].text(np.cos(2*np.pi*ix*nn/N)+xshift[inn], 
+                 np.sin(2*np.pi*ix*nn/N)+yshift[inn], f'{nn}')
+
+
+############# x = 1dx
+ix = 1
+i=1; j=0
+ax[i,j].set_title(r'$j=1$')
+ax[i,j].plot(np.cos(theta[:100]), np.sin(theta[:100]), '-', color='red', lw=4)
+for nn in n:
+    ax[i,j].plot(np.cos(2*np.pi*ix*nn/N), 
+                np.sin(2*np.pi*ix*nn/N), 'o', ms=8, color='black')
+xshift = [-0.2, -0.2, -0.1,  0.1,  0.1, -0.1, -0.16]
+yshift = [-0.2, -0.2, -0.2, -0.2,  0.1,  0.1,  0.12]
+for inn,nn in enumerate(n):
+    ax[i,j].text(np.cos(2*np.pi*ix*nn/N)+xshift[inn], 
+                 np.sin(2*np.pi*ix*nn/N)+yshift[inn], f'{nn}')
+
+############# x = 2dx
+ix = 2
+i=2; j=0
+ax[i,j].set_title(r'$j=2$')
+ax[i,j].plot(np.cos(theta[:200]), np.sin(theta[:200]), '-', color='red', lw=4)
+for nn in n:
+    ax[i,j].plot(np.cos(2*np.pi*ix*nn/N), 
+                np.sin(2*np.pi*ix*nn/N), 'o', ms=8, color='black')
+xshift = [-0.2,  0.0, -0.1,  0.1,  0.0, -0.0, -0.16]
+yshift = [-0.2, -0.3, -0.3, -0.2,  0.2,  0.2,  0.12]
+for inn,nn in enumerate(n):
+    ax[i,j].text(np.cos(2*np.pi*ix*nn/N)+xshift[inn], 
+                 np.sin(2*np.pi*ix*nn/N)+yshift[inn], f'{nn}')
+
+############# x = 3dx
+ix = 3
+i=0; j=1
+ax[i,j].set_title(r'$j=3$')
+ax[i,j].plot(np.cos(theta[:300]), np.sin(theta[:300]), '-', color='red', lw=4)
+for nn in n:
+    ax[i,j].plot(np.cos(2*np.pi*ix*nn/N), 
+                np.sin(2*np.pi*ix*nn/N), 'o', ms=8, color='black')
+xshift = [-0.2, -0.2,  0.1,  0.1,  0.1,  0.1, -0.2]
+yshift = [-0.2, -0.2, -0.2, -0.2,  0.1,  0.2,  0.1]
+for inn,nn in enumerate(n):
+    ax[i,j].text(np.cos(2*np.pi*ix*nn/N)+xshift[inn], 
+                 np.sin(2*np.pi*ix*nn/N)+yshift[inn], f'{nn}')
+
+############# x = 4dx
+ix = 4
+i=1; j=1
+ax[i,j].set_title(r'$j=4$')
+ax[i,j].plot(np.cos(theta[:400]), np.sin(theta[:400]), '-', color='red', lw=4)
+for nn in n:
+    ax[i,j].plot(np.cos(2*np.pi*ix*nn/N), 
+                np.sin(2*np.pi*ix*nn/N), 'o', ms=8, color='black')
+xshift = [-0.2, -0.2,  0.1,  0.1,  0.1,  0.1, -0.2]
+yshift = [-0.2, -0.2, -0.2, -0.2,  0.1,  0.2,  0.1]
+for inn,nn in enumerate(n):
+    ax[i,j].text(np.cos(2*np.pi*ix*nn/N)+xshift[inn], 
+                 np.sin(2*np.pi*ix*nn/N)+yshift[inn], f'{nn}')
+
+############# x = 5dx
+ix = 5
+i=2; j=1
+ax[i,j].set_title(r'$j=5$')
+ax[i,j].plot(np.cos(theta[:500]), np.sin(theta[:500]), '-', color='red', lw=4)
+for nn in n:
+    ax[i,j].plot(np.cos(2*np.pi*ix*nn/N), 
+                np.sin(2*np.pi*ix*nn/N), 'o', ms=8, color='black')
+xshift = [-0.2, -0.2,  0.1,  0.1,  0.0, -0.0, -0.16]
+yshift = [-0.2,  0.1,  0.1, -0.2,  0.2,  0.2,  0.12]
+for inn,nn in enumerate(n):
+    ax[i,j].text(np.cos(2*np.pi*ix*nn/N)+xshift[inn], 
+                 np.sin(2*np.pi*ix*nn/N)+yshift[inn], f'{nn}')
+
+```
+
+
+For real $u(x)$, the $c_n$ will have conjugate symmetry, $c_n=c_{-n}^*$, so that the imaginary parts of the sum cancel. For example, consider two terms of the summation for some given $n$ and $-n.$ If $c_n=c_{n,r} + ic_{n,i}$ and $c_{-n} = c_{-n,r}+ic_{-n,i}$, then 
+
+\begin{align}
+c_ne^{2\pi inx/L} + c_{-n}e^{-2\pi inx/L} = & 
+(c_{n,r}+ic_{n,i})(\cos(2\pi nx/L) + i\sin(2\pi nx/L)) + \\
+& (c_{-n,r}+ic_{-n,i})(\cos(-2\pi nx/L) + i\sin(-2\pi nx/L)).
+\end{align}
+
+The imaginary part of this expression is
+
+\begin{align}
+&ic_{n,r}\sin(2\pi nx/L)   + ic_{n,i}\cos(2\pi nx/L) + \\
+&ic_{-n,r}\sin(-2\pi nx/L) + ic_{-n,i}\cos(-2\pi nx/L) \\
+\end{align}
+
+Since $\sin(-\phi)=-\sin(\phi)$ and $\cos(-\phi) = \cos(\phi)$, the imaginary part cancels when $c_{n,r}=c_{-n,r}$ and $c_{n,i}=-c_{-n,i}$, that is, when $c_n=c_{-n}^*$. Note that points $n=0$, $n=-N/2$, and $n=N/2$ have no imaginary component.
+
+Note that while the $c_n$ have conjugate symmetry, and there is a coefficient $c_n$ associated with each basis function $e^{2\pi inx/L}$, and the $c_n$ are complex numbers, those points are not at the same locations as the points in the images above, nor do they have the same complex angle. That is, don't confuse the points on the circle associated with the Fourier modes with the complex coefficients multiplying those Fourier modes.
+
+-------------------------
+
+The sum in @eq-e is from $n=-N/2$ to $n=N/2$. At these two bounding values, $e^{2\pi inx/L}$ becomes $e^{\pm\pi iNx/L}.$ At $x=x_j=j\Delta x$, with $\Delta x/L = 1/N$, we have $e^{\pm\pi ij} = \pm 1$ for all integer $j.$ (In @fig-basis2, $n=3$ and $n=-3$ are at the same location for all $j.$) Hence, including both $n=-N/2$ and $n=N/2$ in the sum is redundant, and we remove $n=-N/2,$ giving
+
+$$u(x) = \sum_{n=-N/2+1}^{N/2}c_ne^{2\pi inx/L}.$$ {#eq-e2}
+
+Above, we have considered even $N$. For odd $N$, the smallest period is again $2\Delta x=2L/N$, but the maximum number $n$ of these waves that will fit fully on the grid is $\lfloor{N/2}\rfloor$. For $N=5$, we have $n=$ -2, -1, 0, 1, 2.
+
+```{python}
+
+###############
+
+fig, ax = plt.subplots(1,2, figsize=(9,4))
+theta = np.linspace(0,2*np.pi,600)
+
+for i in range(2):
+    ax[i].plot(np.cos(theta), np.sin(theta), '-', color='black')
+    ax[i].set_yticks([])
+    ax[i].set_xticks([])
+    ax[i].plot([-1.2,1.2], [0,0], '-', color='black')
+    ax[i].plot([0,0], [-1.2,1.2], '-', color='black')
+
+#------------------
+
+
+ax[0].set_title(r'N=6, x=$\Delta x$')
+n = range(int(-N/2)+1, int(N/2)+1)
+for nn in n:
+    ax[0].plot(np.cos(2*np.pi*nn/N), 
+                np.sin(2*np.pi*nn/N), 'o', ms=8, color='black')
+xshift = [-0.2, -0.1,  0.1,  0.1, -0.1, -0.16]
+yshift = [-0.2, -0.2, -0.2,  0.1,  0.1,  0.12]
+for inn,nn in enumerate(n):
+    ax[0].text(np.cos(2*np.pi*nn/N)+xshift[inn], 
+                 np.sin(2*np.pi*nn/N)+yshift[inn], f'{nn}')
+ax[0].plot([np.cos(2*np.pi*n[0]/N), np.cos(2*np.pi*n[4]/N)], 
+        [np.sin(2*np.pi*n[0]/N), np.sin(2*np.pi*n[4]/N)], '--', color='gray')
+ax[0].plot([np.cos(2*np.pi*n[1]/N), np.cos(2*np.pi*n[3]/N)], 
+        [np.sin(2*np.pi*n[1]/N), np.sin(2*np.pi*n[3]/N)], '--', color='gray')
+ax[0].axis('off')
+
+#------------------
+
+ax[1].set_title(r'N=5, x=$\Delta x$')
+N = 5
+n = range(int(-N/2), int(N/2)+1)
+for nn in n:
+    ax[1].plot(np.cos(2*np.pi*nn/N), 
+                np.sin(2*np.pi*nn/N), 'o', ms=8, color='black')
+xshift = [-0.2, -0.1,  0.1,  0.1, -0.1, -0.16]
+yshift = [-0.2, -0.2, -0.2,  0.1,  0.1,  0.12]
+for inn,nn in enumerate(n):
+    ax[1].text(np.cos(2*np.pi*nn/N)+xshift[inn], 
+                 np.sin(2*np.pi*nn/N)+yshift[inn], f'{nn}')
+ax[1].plot([np.cos(2*np.pi*n[0]/N), np.cos(2*np.pi*n[4]/N)], 
+        [np.sin(2*np.pi*n[0]/N), np.sin(2*np.pi*n[4]/N)], '--', color='gray')
+ax[1].plot([np.cos(2*np.pi*n[1]/N), np.cos(2*np.pi*n[3]/N)], 
+        [np.sin(2*np.pi*n[1]/N), np.sin(2*np.pi*n[3]/N)], '--', color='gray')
+ax[1].axis('off');
+
+```
+
+---------------------------
+
+@eq-e2 is the **inverse discrete Fourier transform (IDFT)**, rewritten here and evaluated at $x=x_j,$
+
+$$\color{blue}u_j = \sum_{n=-N/2+1}^{N/2}c_ne^{2\pi inj/N}.$$ {#eq-ift}
+
+The corresponding **discrete Fourier transform (DFT)** is 
+
+$$\color{blue}c_n = \frac{1}{N}\sum_{j=0}^{N-1}u_je^{-2\pi inj/N}.$$ {#eq-ft}
+
+These are evaluated using fast Fourier transform (FFT) and its inverse (IFFT), denoted $\mathcal{F}$ and $\mathcal{F}^{-1},$ respectively. That is, $c_n=\mathcal{F}(u_j)$, and $u_j=\mathcal{F}^{-1}(c_n)$.
+
+![](figs/spectral.png){width=300}
+
+We can show that $u_j = \mathcal{F}^{-1}(\mathcal{F}(u_j))$ by inserting @eq-ft into @eq-ift. Before doing this, we change index $j$ in @eq-ft to $J$ so that it doesn't conflict with the $j$ in @eq-ift:
+
+$$u_j = \sum_{n=-N/2+1}^{N/2}\left[ \frac{1}{N}\sum_{J=0}^{N-1}u_Je^{-2\pi inJ/N} \right]e^{2\pi inj/N}.$$
+
+Change the order of the sums and arrange as
+
+$$u_j = \sum_{J=0}^{N-1}u_J\frac{1}{N}\left[ \sum_{n=-N/2+1}^{N/2}e^{2\pi in(j-J)/N}\right].$$
+
+When $J=j$, $e^{2\pi in(j-k)/N}=1$ and the sum in brackets is $N$. When $J\ne j$, the sum is 0. Hence, $u_j=u_j$ is recovered.
+
+## Variations
+
+
+The DFT/IDFT forms given here are not unique, and several variations are common.
+
+- The normalizing factor $1/N$ sometimes appears on the IDFT instead of the DFT. Sometimes it is split uniformly so that a $1/\sqrt{N}$ factor appears in both the IDFT and the DFT.
+- The sign in the exponent is sometimes switched between the IDFT and the DFT.
+- In the IDFT, the sum from $n=-N/2+1$ to $N/2$ is sometimes given from $n=-N/2$ to $N/2-1$.
+- Finally, in the IDFT, the range $n=-N/2+1$ to $N/2$ is sometimes cycled to $n=0$ to $N-1$. 
+
+This last point can be shown as follows. Show that
+  
+  $$\sum_{n=-N/2+1}^{N/2}F_ne^{2\pi inj/N} = \sum_{m=0}^{N-1}F_m^\prime e^{2\pi imj/N}.$$
+
+Consider $N=6$. The sums over $n$ and $m$ are, respectively,
+
+$$ F_{-2}e^{\theta(-2)} + F_{-1}e^{\theta(-1)} + F_{0}e^{\theta(0)} + 
+   F_{1}e^{\theta(1)} + F_{2}e^{\theta(2)} + F_{3}e^{\theta(3)},$$
+
+$$ F^\prime_{0}e^{\theta(0)} + F^\prime_{1}e^{\theta(1)} + F^\prime_{2}e^{\theta(2)} + 
+   F^\prime_{3}e^{\theta(3)} + F^\prime_{4}e^{\theta(4)} + F^\prime_{5}e^{\theta(5)},$$
+
+where $\theta = 2\pi ij/N$. As before, the exponential terms are points in the complex plane on the unit circle. Those points are shown for first and second sums (over $n$, and $m$), on the left and right below for $j=1$.
+
+![](figs/shift.png){width=600}
+
+Note that the same points appear on the circle for both index sets. For the sums to be equal, the same complex coefficients need to multiply the same points on the unit circle. Hence, we have $F_{-2}=F^\prime_4$, $F_{-2}=F^\prime_4$, $F_{-1}=F^\prime_5$, $F_{0}=F^\prime_0$, $F_{1}=F^\prime_1$, $F_{2}=F^\prime_2$, $F_{3}=F^\prime_3$. 
+
+For other values of $j$, the points on the unit circle are the same as those shown in @fig-basis2
+
+## Derivatives
+
+
+In applying the pseudospectral method to partial differential equations, we need to evaluate spatial derivatives as points $x_j$, such as $\partial u_j/\partial x$. The method is subject to truncation error associated with the finite number of grid points and spectral modes used, but derivatives are evaluated exactly in spectral space. We have
+
+$$u(x) = \sum_{n=-N/2+1}^{N/2}c_ne^{2\pi inx/L},$$
+$$\frac{\partial u}{\partial x} = \sum_{n=-N/2+1}^{N/2}(2\pi in/L)c_ne^{2\pi inx/L},$$
+$$\frac{\partial^2 u}{\partial x^2} = \sum_{n=-N/2+1}^{N/2}-(2\pi n/L)^2c_ne^{2\pi inx/L}.$$
+
+Evaluated at $x=x_j$, the derivatives can be written as 
+
+$$\frac{\partial \mathbf{u}}{\partial x} = \mathcal{F}^{-1}[(2\pi i\mathbf{n}/L)\odot\mathcal{F}(\mathbf{u})],$$ 
+$$\frac{\partial^2 \mathbf{u}}{\partial x^2} = \mathcal{F}^{-1}[(2\pi i\mathbf{n}/L)^2\odot\mathcal{F}(\mathbf{u})].$$ 
+
+Here, the bold symbols denote arrays. So, $\mathcal{F}(\mathbf{u})$ is the discrete Fourier transform of the $u$ array at each grid point $j$, and $\mathbf{n}$ is a vector with elements $-N/2+1,\,\ldots,\,N/2$. The $\odot$ symbol indicates element-wise multiplication of two arrays. $\partial\mathbf{u}/\partial x$ is the array of first derivatives at each grid point $x_j$.
+
+In a PDE with the divergence of a diffusive flux $q=-\Gamma(u)du/dx$, we have 
+
+$$\frac{\partial \mathbf{q}}{\partial x} = \mathcal{F}^{-1}[(2\pi i\mathbf{n}/L)\odot\mathcal{F}(\mathbf{q})],$$ 
+$$\mathbf{q} = -\Gamma(\mathbf{u})\odot\mathcal{F}^{-1}[(2\pi i\mathbf{n}/L)\odot\mathcal{F}(\mathbf{u})].$$ 
+
+
+## Example, viscous Burgers equation
+
+The viscous Burgers equation is 
+
+$$\frac{\partial u}{\partial t} = -u\frac{\partial u}{\partial x} + \nu\frac{\partial^2u}{\partial x^2}.$$
+
+Here, $\nu$ is viscosity. This equation is nonlinear.
+
+- Use a periodic initial condition of $u_0(x) = \cos(2\pi x/L)+2$.
+- $\nu=0.1$
+- $L=10$
+- Solve to $t=10$.
+
+### Exact solution
+The [exact solution](https://en.wikipedia.org/wiki/Burgers%27_equation) is given by
+
+$$u(x,t) = -2\nu\frac{\partial}{\partial x}\ln\left\{\frac{1}{\sqrt{4\pi\nu t}}\int_{-\infty}^\infty\exp\left[-\frac{(x-x^\prime)^2}{4\nu t}-\frac{1}{2\nu}\int_0^{x^\prime}u_0(x^{\prime\prime})dx^{\prime\prime}\right]dx^\prime\right\}.$$
+
+This equation is evaluated here using Sympy.
+
+```{python}
+#| echo: true
+
+import sympy as sp
+
+v, t, L, x, xp = sp.symbols('v, t, L, x, xp')
+
+ex = L/(4*sp.pi*v)*sp.sin(2*sp.pi*xp/L) + xp/v
+
+ex = -2*v*sp.diff(sp.ln(1/sp.sqrt(4*sp.pi*v*t)*
+                        sp.Integral(sp.exp(-(x-xp)**2/4/v/t - ex), 
+                                    (xp,-sp.oo, sp.oo))), x)
+
+ex = ex.subs([(v,0.1),(t,10.0),(L,10.0)])    # make sure these are the same as below
+
+uex = sp.lambdify(x, ex)                     # then u_exact(x) = uex(x)
+
+```
+
+### Spectral solution
+$$\frac{d\mathbf{u}}{dt} = -\mathbf{u}\odot\mathcal{F}^{-1}\left(\frac{2\pi i\mathbf{n}}{L}\odot\mathcal{F}(\mathbf{u})\right) + 
+\nu \mathcal{F}^{-1}\left(\left(\frac{2\pi i\mathbf{n}}{L}\right)^2\odot\mathcal{F}(\mathbf{u})\right).$$
+
+Here, the square of $\mathbf{n}$ is done element-wise.
+
+```{python}
+#| echo: true
+
+from scipy.integrate import odeint
+from scipy.fft import fft, ifft
+
+def spectral(nx):
+    L    = 10.0
+    v    = 0.1           # use same value as the exact solution above
+    tend = 10            # use same value as the exact solution above
+    
+    #---------- solution domain, initial condition
+    
+    dx = L/nx     # not L/(nx-1)
+    x = np.linspace(0.0, L-dx, nx)
+    u0 = np.cos(2*np.pi*x/L) + 2
+    
+    #---------- solve the problem
+    
+    def rates(u, t):
+        N = len(u)
+        n = np.arange(N); n[int(N/2)+1:]-= N             # n[int(N/2):]-=N
+        return -u*ifft(2*np.pi*1j*n/L*fft(u)).real - \
+                v*ifft((2*np.pi*n/L)**2*fft(u)).real
+    
+    t = np.linspace(0,tend,11)
+    u = odeint(rates, u0, t)
+    
+    return x, u, u0
+
+#---------- (Now, call spectral(32) to solve, then plot result, not shown)
+```
+
+```{python}
+
+x,u, u0 = spectral(32)
+
+#---------- Plot result
+
+xe = np.linspace(0,10,100)
+ue = np.empty(len(xe))
+for i in range(len(xe)):
+    ue[i] = uex(xe[i]) 
+
+fig,ax=plt.subplots()
+ax.plot(x,u0, ':', color='blue', lw=1)
+ax.plot(xe,ue, '-', color='red', lw=2)
+ax.plot(x,u[-1,:], 'o', color='gray', lw=1)
+    
+plt.rc('font', size=14)
+plt.gca().set_xlim([0,10])
+plt.xlabel('x', fontsize=14)
+plt.ylabel(r'u', fontsize=14);
+plt.legend(['initial', 'exact', 'spectral'], frameon=False);
+
+```
+
+### Finite difference solver
+Discretize the spatial derivatives using second order central differences on the diffusion term, and either upwind or central differences on the advective term.
+
+```{python}
+#| echo: true
+
+def FD(nx, upwind=False):
+    L    = 10.0
+    v    = 0.1           # use same value as the exact solution above
+    tend = 10            # use same value as the exact solution above
+    
+    #---------- solution domain, initial condition
+    
+    dx = L/nx     # not L/(nx-1)
+    x = np.linspace(0.0, L-dx, nx)
+    u0 = np.cos(2*np.pi*x/L) + 2
+    
+    #---------- solve the problem
+    
+    i  = np.arange(nx)
+    ip = i+1; ip[-1] = 0
+    im = i-1; im[0]  = nx-1
+    
+    def rates(u, t):
+        if upwind:       # upwind on the advective term, 1st order
+            return -u*(u - u[im])/dx + v/dx/dx*(u[im] - 2*u + u[ip])
+        else:            # central difference, 2nd order
+            return -u*(u[ip] - u[im])/2/dx + v/dx/dx*(u[im] - 2*u + u[ip])
+    
+    t = np.linspace(0,tend,11)
+    u = odeint(rates, u0, t)
+    
+    return x, u, u0
+
+```
+
+### Compare spectral and finite difference
+
+Compare the methods on grids with varying number of points. 
+
+- The spectral method bottoms out at $\le$ 80 points, where the average error is $0.4\times 10^6$ times less than the second order finite difference method.
+- For an average relative error of around 4$\times 10^6$, the spectral method requires around 13 times fewer grid points (40 versus 512).
+- Spectral methods give exponential convergence, while finite difference methods give power-law convergence.
+
+```{python}
+
+nxs = np.array([2,4,6,8,10,14,20,30,45,60,80,128,256,512])
+errSP   = np.empty(len(nxs))
+errFD   = np.empty(len(nxs))
+errFDUW = np.empty(len(nxs))
+
+for i,nx in enumerate(nxs):
+    x,usp,u0 = spectral(nx)
+    x,ufd,u0 = FD(nx, upwind=False)
+    x,ufduw,u0 = FD(nx, upwind=True)
+    ue = np.empty(len(x))
+    for j in range(len(ue)):
+        ue[j] = uex(x[j])
+    errSP[i]   = np.linalg.norm((usp[-1,:]-ue)/ue)/nx
+    errFD[i]   = np.linalg.norm((ufd[-1,:]-ue)/ue)/nx
+    errFDUW[i] = np.linalg.norm((ufduw[-1,:]-ue)/ue)/nx
+    
+#---------- Spectral, and show exponential convergence: fit err=a*exp(b*nx)
+
+plt.loglog(nxs,errSP, 'bo', label="spectral")
+
+b_loga = np.polyfit(nxs[2:11], np.log(errSP[2:11]), 1)
+a,b = np.exp(b_loga[1]), b_loga[0]
+xf = np.logspace(0,2,100)
+plt.loglog(xf, a*np.exp(b*xf), ':', color='blue', label="");
+
+#---------- FD, and show power law convergence: fit err=a*nx^b
+
+plt.loglog(nxs,errFD, 'gs', label="FD central")
+b_loga = np.polyfit(np.log(nxs[-4:]), np.log(errFD[-4:]), 1)
+a,b = np.exp(b_loga[1]), b_loga[0]
+xf = np.logspace(0,3,100)
+plt.loglog(xf, a*xf**b, ':', color='green', label="");
+
+plt.loglog(nxs,errFDUW, 'r^', label="FD upwind")
+b_loga = np.polyfit(np.log(nxs[-4:]), np.log(errFDUW[-4:]), 1)
+a,b = np.exp(b_loga[1]), b_loga[0]
+xf = np.logspace(0,3,100)
+plt.loglog(xf, a*xf**b, ':', color='red', label="");
+
+#----------
+
+plt.xlabel('# points')
+plt.ylabel('Average Relative Error')
+plt.xlim([1,1000])
+plt.ylim([1E-10,1])
+
+plt.legend(frameon=False);
+
+```
+
+## 2D transforms
+
+
+In one dimension, the basis function of the Fourier series is $\phi_n(x)=e^{2\pi inx/L}$. In two dimensions we have $\phi_{n,m}(x,y) = e^{2\pi i(nx/L_x+my/L_y)} = e^{2\pi inx/L_x}e^{2\pi imy/L_y}$.
+
+The IDFT and DFT are given by
+
+$$\text{IDFT:}\phantom{xxx}u_{j,k} = \sum_{n=-N_n/2+1}^{N_n/2}\left[ \sum_{m=-N_m/2+1}^{N_m/2} c_{n,m}e^{2\pi imy_k/L_y}\right] e^{2\pi inx_j/L_x},$$
+
+$$
+\text{DFT:}\phantom{Ixxx}c_{n,m} = \frac{1}{N_x}\sum_{j=0}^{N_x-1}\underbrace{\left[ \frac{1}{N_y} \sum_{k=0}^{N_y-1} u_{j,k}e^{-2\pi imy_k/L_y} \right]}_{A_j} e^{-2\pi inx_j/L_x}. $$ {#eq-dft2D}
+
+Note, $N_n=N_x$, and $N_m=N_y$. The term in brackets and $A_j$ are defined to facilitate the presentation and computation. We recognize the term in brackets in the DFT as a one-dimensional DFT in the y-direction, operating on the row $u_{j,k}$ for given $j$. Each $A_j$ is an array with elements corresponding to $m=-N_m/2+1,\ldots,N_m/2$. Hence, $A$ is a matrix with elements $A_{j,m}$ (rows $j$ and columns $m$). The outer sum is also a one-dimensional DFT operating on columns of $A_{j,m}$ for each $m$.
+
+In Python, $c_{n,m}$ is computed as:
+```{python}
+#| echo: true
+#| eval: false
+for j in range(Nx):
+    A[j,:] = fft(u[j,:])
+for m in range(Nm):
+    c[:,m] = fft(a([:,m]))
+```
+We don't need an intermediate matrix $A$, rather, $c$ can be computed \emph{in place}. The code for the transforms is given below and compared with the two-dimensional transform available directly in ths `scipy.fft` module. Note that the loops are the same between the DFT and the IDFT, except for notation, and trading `dft` and `idft`, as well as $c$ and $u$. 
+
+```{python}
+#| echo: true
+import numpy as np
+from scipy.fft import fft, ifft, fft2, ifft2
+
+#---------- 2D DFT
+
+def fft2D(u):
+    c = np.empty_like(u, dtype=np.complex128)
+    for j in range(Nx):
+        c[j,:] = fft(u[j,:])
+    for m in range(Nm):
+        c[:,m] = fft(c[:,m])
+    return c
+    
+#---------- 2D IDFT
+
+def ifft2D(c):
+    u = np.empty_like(c, dtype=np.complex128)
+    for n in range(Nn):
+        u[n,:] = ifft(c[n,:])
+    for k in range(Ny):
+        u[:,k] = ifft(u[:,k])
+    return u
+
+#---------- (These give identical results to fft2 and ifft2)
+
+```
+
+```{python}
+
+#Nx = Nn = 3
+#Ny = Nm = 4
+#u = np.random.rand(Nx,Ny)
+#
+#print(fft2D(u)  - fft2(u))
+#print()
+#print(ifft2D(u) - ifft2(u))
+
+```
+
+### Derivatives
+
+The partial derivative with respect to $x$ evaluated at grid point $j$, $k$, is denoted $\partial u_{j,k}/\partial x$, and written as
+
+$$
+\frac{\partial u_{j,k}}{\partial x} = \sum_{n=-N_n/2+1}^{N_n/2}\frac{2\pi in}{L_x}\left[ \sum_{m=-N_m/2+1}^{N_m/2} c_{n,m}e^{2\pi imy_k/L_y}\right] e^{2\pi inx_j/L_x}.
+$$ {#eq-2Dder}
+
+For higher-order derivatives, we take corresponding powers of $(2\pi in/L_x)$.
+
+In principle, if we compute the 2D array $c_{n,m}$ from a 2D DFT, then we can use it in @eq-2Dder to compute the 2D derivative array using loops over 1D IDFT. 
+
+
+```{python}
+
+########## NOT SHOWN, just here for reference
+
+#| echo: true
+#| eval: false
+
+#---------- (df/dx)_i,j
+
+def derx2D(c, Lx, nder=1):
+    Nx, Ny = np.shape(c)
+    up = np.empty_like(c, dtype=np.complex128)         # up as in uprime
+    for n in range(Nx):
+        up[n,:] = ifft(c[n,:])
+    n = np.arange(Nx); n[int(Nx/2)+1:]-= Nx
+    for k in range(Ny):
+        up[:,k] = ifft((2*np.pi*1j*n/Lx)**nder*up[:,k])
+    return np.real(up)
+
+#---------- (df/dy)_i,j
+
+def dery2D(c, Ly, nder=1):
+    Nx, Ny = np.shape(c)
+    up = np.empty_like(c, dtype=np.complex128)
+    m = np.arange(Ny); m[int(Ny/2)+1:]-= Ny
+    for n in range(Nx):
+        up[n,:] = ifft((2*np.pi*1j*m/Ly)**nder*c[n,:])
+    for k in range(Ny):
+        up[:,k] = ifft(up[:,k])
+    return np.real(up)
+
+```
+
+Instead, @eq-2Dder can be simplified. We insert @eq-dft2D for $c_{n,m}$ after changing the indices in that equation from $j$ to $J$ and $k$ to $K$ so they don't conflict with $j$ and $k$ in @eq-2Dder. This gives
+
+$$
+\frac{\partial u_{j,k}}{\partial x} = \frac{1}{N_xN_y}\sum_n\frac{2\pi i n}{L_x}e^{2\pi inx_j/L_x}\sum_J\sum_K u_{J,K}e^{-2\pi inx_J/L_x}\sum_me^{2\pi i\frac{m}{N_y}(k-K)},
+$$
+
+where we have reordered the summations and terms, and used $y_k/L_y=k/N_y$ (and similarly for $K$). The sum on the far right is $N_y$ when $k=K$ and zero otherwise. This cancels with the leading $1/N_y$ factor and the sum over $K$ becomes a single term for $k$. Rearranging gives 
+
+$$
+\frac{\partial u_{j,k}}{\partial x} = \sum_{n=-N/2+1}^{N_x/2}\frac{2\pi i n}{L_x}\left[\frac{1}{N_x}\sum_{J=0}^{N_x-1}u_{J,k}e^{-2\pi inx_J/L_x}\right]e^{2\pi inx_j/L_x}.
+$$
+
+The term in brackets is the DFT of a *line* of $u$ in the $x$-direction for a given $y$-direction index $k$. The outer sum is an IDFT of the term multiplying the far right exponential factor. The derivative is then
+
+$$\frac{\partial \mathbf{u}_k}{\partial x} = \mathcal{F}^{-1}[(2\pi i\mathbf{n}/L_x)\odot\mathcal{F}(\mathbf{u}_k)].$$
+
+Here, $\mathbf{u}_k$ is the array of $u$ values at points $j$ for given $k$. The 2D partial derivative with respect to $x$ at a given $y$ is evaluated the same as for 1D, and similarly for the derivative with respect to $y$. Higher derivatives have higher powers of $2\pi i\mathbf{n}/L_x$, where powers of $\mathbf{n}$ are computed element-wise
+
+
+## Example, 2D heat equation
+
+Solve the following PDE with a constant diffusivity $\Gamma=1$:
+
+$$\frac{\partial u}{\partial t} = \Gamma\frac{\partial^2u}{\partial x^2} +\Gamma\frac{\partial^2u}{\partial x^2}.$$ 
+
+Use periodic boundary conditions and centered rectangular initial condition. The code below solves the problem using the pseudospectral method. A finite difference solution is also coded. Just uncomment the last line.
+
+```{python}
+#| echo: true
+
+import numpy as np
+import matplotlib.pyplot as plt
+from numpy.fft import  fft, ifft, fft2
+from IPython.display import display, clear_output
+import time
+
+#--------- setup
+    
+Lx = 2.0*np.pi
+Ly = 4.0*np.pi
+Nx = 20
+Ny = 40
+G = 1.0
+trun = 1.0
+ntimes = 31
+
+dx = Lx/Nx
+dy = Ly/Ny
+x = np.linspace(0.0, Lx-dx, Nx)
+y = np.linspace(0.0, Ly-dy, Ny)
+X,Y = np.meshgrid(x,y)
+X = X.T; Y = Y.T
+IJ = np.ix_                               # for convenient 2D indexing
+u0 = np.zeros((Nx,Ny))
+u0[IJ(np.arange(5,15), np.arange(10,30))] = 1.0
+
+#--------- define PDE right-hand-side
+
+def rates(uu, t):
+
+    u = np.reshape(uu, (Nx,Ny))           # convert 1D array to 2D for eval 
+
+    n = np.arange(Nx); n[int(Nx/2)+1:]-= Nx
+    m = np.arange(Ny); m[int(Ny/2)+1:]-= Ny
+
+    d2udx2 = np.empty((Nx, Ny))
+    d2udy2 = np.empty((Nx, Ny))
+    for k in range(Ny): d2udx2[:,k] = ifft( (2*np.pi*1j*n/Lx)**2 * fft(u[:,k])).real
+    for j in range(Nx): d2udy2[j,:] = ifft( (2*np.pi*1j*m/Ly)**2 * fft(u[j,:])).real
+
+    dudt = G*(d2udx2 + d2udy2)
+    return np.reshape(dudt, shape=Nx*Ny)
+
+def rates_FD(uu, t):
+    u = np.reshape(uu, (Nx,Ny))           # convert 1D array to 2D for eval 
+
+    i = np.arange(0,Nx); ip=i+1; ip[-1]=0; im=i-1; im[0]=Nx-1
+    j = np.arange(0,Ny); jp=j+1; jp[-1]=0; jm=j-1; jm[0]=Ny-1;
+
+    dudt =  G*( (u[IJ(im,j)] - 2.0*u[IJ(i,j)] + u[IJ(ip,j)])/dx**2 + 
+                (u[IJ(i,jm)] - 2.0*u[IJ(i,j)] + u[IJ(i,jp)])/dy**2 )
+    return np.reshape(dudt, shape=Nx*Ny)
+
+#--------- solve the ODE system (method of lines)
+
+uu0 = np.reshape(u0, shape=Nx*Ny)          # convert 2D array to 1D for solve
+times = np.linspace(0,trun, ntimes)
+
+uu = odeint(rates, uu0, times)              # solve spectral
+#uu = odeint(rates_FD, uu0, times)          # solve finite difference (2nd order central)
+
+```
+
+```{python}
+
+#--------- (plot solution at three times, not shown)
+
+fig, ax = plt.subplots(1,3, figsize=(7,4))
+
+levels = np.linspace(np.min(uu),np.max(uu),51)
+ax[0].contourf(X,Y, np.reshape(uu[0,:], shape=(Nx,Ny)),  100, levels=levels);
+ax[1].contourf(X,Y, np.reshape(uu[9,:], shape=(Nx,Ny)), 100, levels=levels);
+ax[2].contourf(X,Y, np.reshape(uu[-1,:], shape=(Nx,Ny)), 100, levels=levels);
+ax[0].set_title('t=0')
+ax[1].set_title(f't={times[9]}')
+ax[2].set_title(f't={times[-1]}');
+for i in range(3): 
+    ax[i].set_xlabel('X'); 
+    ax[i].set_xticks([0,2,4,6])
+    ax[i].set_aspect('equal', adjustable='box');
+ax[0].set_ylabel('Y');
+ax[1].set_yticks([]);
+ax[2].set_yticks([]);
+
+```

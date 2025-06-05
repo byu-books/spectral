@@ -1,0 +1,1103 @@
+---
+execute:
+    echo: false
+format:
+    html:
+        toc: true
+        toc-depth: 4
+        toc-expand: true
+        toc-title: Contents
+---
+
+## Chebyshev polynomials
+
+The first seven Chebyshev polynomials of the first kind are
+
+\begin{align}
+&T_0(x) = 1, \\
+&T_1(x) = x, \\
+&T_2(x) = 2x^2-1, \\
+&T_3(x) = 4x^3-3x, \\
+&T_4(x) = 8x^4-8x^2+1, \\
+&T_5(x) = 16x^5-20x^3+5x, \\
+&T_6(x) = 32x^6-48x^4+18x^2-1. \\
+\end{align}
+
+These are plotted below.
+
+```{python}
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+def T0(x): return np.ones(len(x))
+def T1(x): return x
+def T2(x): return 2*x*T1(x) - T0(x)
+def T3(x): return 2*x*T2(x) - T1(x)
+def T4(x): return 2*x*T3(x) - T2(x)
+def T5(x): return 2*x*T4(x) - T3(x)
+def T6(x): return 2*x*T5(x) - T4(x)
+
+x = np.linspace(-1,1,1000)
+plt.plot(x,T0(x))
+plt.plot(x,T1(x))
+plt.plot(x,T2(x))
+plt.plot(x,T3(x))
+plt.plot(x,T4(x))
+plt.plot(x,T5(x))
+plt.plot(x,T6(x))
+plt.xlabel('x')
+plt.ylabel('y')
+plt.plot(x,0.0*x, ':', color='gray')
+
+```
+
+In general, a recurrence relation defines $T_n$ given $T_0$ and $T_1$. That is,
+
+$$T_n(x) = 2xT_{n-1}(x) - T_{n-2}(x).$$ 
+
+The domain of interest is $-1\le x \le 1$ and the $T_n$ are bounded between -1 and 1. This is due to the relation to the cosine function. The Chebyshev polynomials are defined as
+
+$$T_n(\cos\theta) = \cos(n\theta).$$
+
+This is seen using Euler's identity,
+
+$$(e^{i\theta})^n = e^{in\theta} = (\cos\theta + i\sin\theta)^n = \cos(n\theta) + i\sin(n\theta),$$
+which we can rearrange to 
+$$\cos(n\theta) = e^{in\theta} - i\sin(n\theta) = (\cos\theta + i\sin\theta)^n -i\sin(n\theta).$$
+
+Since $\cos(n\theta)$ is real, the imaginary parts occuring from use of Euler's identity and the above rearrangement cancel. We define
+
+$$x = \cos\theta.$$
+
+It is clear that $T_0(x) = T_0(\cos\theta) = \cos(0\cdot\theta) = 1.$ Also, $T_1(x) = T_1(\cos\theta) = \cos{\theta} = x.$ 
+
+The second Chebyshev polynomial is 
+
+\begin{align}
+T_2(x) &= T_2(\cos\theta) = \cos(2\theta) \\
+&= (\cos\theta + i\sin\theta)^2 - i\sin(2\theta) \\
+&= \cos^2\theta - \sin^2\theta + \cancel{[2i\cos\theta\sin\theta - i\sin(2\theta)]} \\
+&= \cos^2\theta - (1-\cos^2\theta) \\
+&= 2\cos^2\theta - 1 \\
+&= 2x^2 - 1.
+\end{align}
+
+Here, we are using the identity $\cos^2\theta + \sin^2\theta = 1$, and the imaginary term in brackets is zero. Note that $T_2 = 2xT_1 - T_0$. If we write $y=\sin\theta$, then we can see that 
+
+$$T_n = (x+iy)^n -\cancel{i\sin(n\theta)}.$$
+
+Evaluating this for higher $n$, shows a pattern, such as
+
+\begin{align}
+T_6 = 
+\binom{6}{0}x^6y^0i^0 + 
+&\cancel{\binom{6}{1}x^5y^1i^1} + 
+\binom{6}{2}x^4y^2i^2 + 
+\cancel{\binom{6}{3}x^3y^3i^3} + \\
+&\binom{6}{4}x^2y^4i^4 +
+\cancel{\binom{6}{5}x^1y^5i^5} + 
+\binom{6}{6}x^0y^6i^6.
+\end{align}
+
+This pattern gives
+
+$$ T_n = \sum_{k=0}^{n/2}\binom{n}{2k}x^{n-2k}(x^2-1)^k,$$
+
+where $y^2 = 1-x^2$ is used, that is, $\sin^2\theta = 1-\cos^2\theta$.
+
+--------------------------------------
+
+The periodic, trigonometric character of the Chebyshev polynomials, and the relation between the angle $\theta$ and its projection to $x$, given by $x=\cos\theta$ is shown in the figure below. $\theta$ increases from 0 to $\pi$, traversing the half circle once, while the angle $n\theta$ moves faster, in proportion to $n$. That is, for $n=2$, $n\theta$ varies from 0 to $2\pi$ as $\theta$ varies from 0 to $\pi$. For $n=3$, $n\theta$ varies from 0 to 3\pi$ as $\theta$ varies from 0 to $\pi$. $T_n$ is $\cos{n\theta}$, so $T_n$ varies from 1 to -1 or -1 to 1 $n$ times as $\theta$ varies. The math is obvious but the point is to visualize the behavior. The figure below shows $\cos(n\theta)$, which are the value of $T_n$, plotted versus $\theta$ for $0\le\theta\le \pi$ on the left, and $\cos(n\theta)$ plotted versus $x=\cos\theta$ on the right. The right plot is just the plot of $T_n(x)$ versus $x$.
+
+
+```{python}
+
+theta = np.linspace(0,np.pi,100)
+x = np.cos(theta)
+
+fig, ax = plt.subplots(4,2, figsize=(8,8))
+for j in range(2):
+    if j==0:
+        ax[0,j].set_title(r'$\cos(n\theta)$ vs $\theta$')
+    else:
+        ax[0,j].set_title(r'$\cos(n\theta)$ vs $x=\cos\theta$')
+    for i in range(4):
+
+        ax[i,j].spines['top'].set_visible(False)
+        ax[i,j].spines['right'].set_visible(False)
+        ax[i,j].spines['bottom'].set_position('zero')
+        ax[i,j].set_ylim([-1.05,1.05])
+        ax[i,j].set_yticks([-1,1])
+
+
+        if j==0:
+            ax[i,j].set_xlim([0,np.pi])
+            ax[i,j].set_xticks([3.14])
+            ax[i,j].plot(theta, np.cos(theta*(i+1)))
+        else:
+            ax[i,j].set_xlim([-1,1])
+            ax[i,j].set_xticks([-1, 1])
+            ax[i,j].plot(x, np.cos(theta*(i+1)))
+
+for i in range(4): ax[i,0].text(0.2,-0.8, f'n={i+1}')
+
+``` 
+
+As angle $\theta$ varies uniformly on the half-circle, the value $T_n = \cos{n\theta}$ oscillates between 1 and -1 $n$ times. We can think of this as a cosine wave wrapped around a half-cylinder. $T_n$ is the vertical value. $x=\cos\theta$ is the projection of the radial point on the circumference of the circle at angle $\theta$ to the x-axis bisecting the circle. $T_n(x)$ is the projection of the $\cos(n\theta)$ function that wraps around the half-cylinder onto the vertical plane bisecting the cylinder. This is illustrated in the figure below. The left plots are angled so as to ssee the wrapped cosine functions. The left plots are angled to highlight the projection to the green vertical bisecting plane.
+
+
+```{python}
+
+from mpl_toolkits.mplot3d import Axes3D
+
+def make_fig(n):
+
+    fig = plt.figure(figsize=(8,8))
+    ax0 = fig.add_subplot(1,2,1, projection='3d')
+    ax1 = fig.add_subplot(1,2,2, projection='3d')
+    ax = [ax0, ax1]
+
+    for i in range(2):
+
+        ntheta = np.linspace(0,np.pi,1000)
+        z = np.cos(n*theta)
+        x = np.cos(theta)
+        y = np.sin(theta)
+
+        ax[i].plot3D(x,y,z)
+        ax[i].set_xlabel('x')
+        ax[i].set_xlim([-1.3,1.3])
+        ax[i].set_ylim([-1.3,1.3])
+        ax[i].set_zlim([-1.3,1.3])
+        ax[i].set_yticks([])
+        ax[i].set_zticks([])
+        ax[i].set_xticks([-1,0,1])
+
+        phi = np.linspace(0,np.pi*2,1000)
+        ax[i].plot3D(np.cos(phi), np.sin(phi),  np.ones(1000), color='black', lw=0.8)
+        ax[i].plot3D(np.cos(phi), np.sin(phi), -np.ones(1000), color='black', lw=0.8)
+        ax[i].plot3D([-1,-1], [0,0], [-1,1],                   color='black', lw=0.8)
+        ax[i].plot3D([1,1],   [0,0], [-1,1],                   color='black', lw=0.8)
+
+        if i==0:
+            phi = 30*np.pi/180
+            ax[i].plot3D([0,1], [0,0], [-1,-1], color='gray')
+            ax[i].plot3D([0,np.cos(phi)], [0,np.sin(phi)], [-1,-1], color='gray')
+            ax[i].text(0.7,0.05,-1,r'$\theta$')
+            
+        ax[i].set_box_aspect(aspect=None, zoom=0.92)
+
+        ax[i].yaxis._axinfo['juggled'] = (1,0,2)
+        ax[i].zaxis._axinfo['juggled'] = (1,0,2)
+
+        ax[i].set_title(f'n={n}')
+
+    ax[0].view_init(elev=30, azim=-90, roll=0)
+    ax[1].view_init(elev=0, azim=-90, roll=0)
+
+    x = np.array([-1,1])
+    z = np.array([-1,1])
+    X,Z = np.meshgrid(x,z)
+    Y = np.zeros_like(X)
+    ax[0].plot_surface(X,Y,Z, color='green', alpha=0.2)
+    ax[1].plot_surface(X,Y,Z, color='green', alpha=0.2)
+
+
+#make_fig(1)
+#make_fig(2)
+#make_fig(3)
+make_fig(6)
+
+```
+
+```{python}
+
+import plotly.express as px
+import plotly.graph_objects as go
+import numpy as np
+
+fig = go.Figure()
+fig.update_layout(width=700, height=700, margin=dict(t=0, r=0, l=0, b=0))
+
+#---------------
+
+nn = 20
+theta = np.linspace(0,np.pi,1000)
+x = np.cos(theta)
+y = np.sin(theta)
+
+for n in range(nn):
+    z = np.cos((n+1)*theta)
+    visible = True if n==5 else False
+    fig.add_scatter3d(x=x,y=y,z=z, mode='lines', line=dict(color='blue'), visible=visible)
+
+#---------------
+
+#fig.data[5].visible=True
+
+phi = np.linspace(0,2*np.pi,1000)
+x = np.cos(phi)
+y = np.sin(phi)
+z = np.ones(1000)
+fig.add_scatter3d(x=x,y=y,z=z, mode='lines', line=dict(color='gray'))
+fig.add_scatter3d(x=x,y=y,z=-z, mode='lines', line=dict(color='gray'))
+
+x = np.array([-1,1])
+y = np.array([0,0])
+z = np.array([[-1,-1],[1,1]])
+fig.add_surface(x=x, y=y, z=z, colorscale = [[0, 'rgb(0,255,0)'], [1, 'rgb(0,255,0)']], showscale=False, opacity=0.2)
+
+camera = dict( eye=dict(x=18,y=-20,z=10) )
+fig.update_layout(scene_camera=camera)
+fig.update_layout(showlegend=False)
+fig.update_scenes(camera_projection_type='orthographic')
+
+#---------------
+
+steps = []
+for i in range(nn):
+    step = dict( method="update", label=f'{i}',
+                 args=[{"visible": [False] * len(fig.data)}] )
+    step["args"][0]["visible"][i] = True  # Toggle i'th trace to "visible"
+    step["args"][0]["visible"][nn] = True  # Toggle i'th trace to "visible"
+    step["args"][0]["visible"][nn+1] = True  # Toggle i'th trace to "visible"
+    step["args"][0]["visible"][nn+2] = True  # Toggle i'th trace to "visible"
+    steps.append(step)
+
+sliders = [dict( active=5,
+                 currentvalue={"prefix": "n: "},
+                 pad={"t": 10},
+                 steps=steps )]
+
+fig.update_layout( sliders=sliders )
+
+fig.show()
+
+```
+
+
+## Chebyshev roots and extrema
+
+The roots of the $N^{th}$ order Chebyshev polynomial of the first kind are given by
+
+$$x_j = \cos\theta_j,$$
+$$\theta_j = \frac{\pi}{N}(j+1/2),$$
+
+with $j=0,\,\ldots,\,N-1$. That is, $\theta_j$ is uniformly distributed between and including $\pi/2N$, and $\pi-\pi/2N$. The roots are then just the projection $x_j=\cos\theta_j$.
+
+For example, for $N=6$, we have $T_6(x_j) = 32x^6 - 48x^4 + 18x^2-1 = 0$ as shown below. Note that these roots are ordered from high to low. Replace $x_j=\cos\theta_j$ with $x_j=-\cos\theta_j$ to order them from low to high.
+
+```{python}
+
+import numpy as np
+import matplotlib.pyplot as plt
+from numpy.polynomial import chebyshev as cheb
+
+N = 8
+theta = np.array([np.pi*(k+0.5)/N for k in range(N)])
+x = -np.cos(theta)  # or use cheb.chebpts1(N)
+
+tt = np.linspace(0,np.pi,1000)
+xx = np.cos(tt)
+yy = np.sin(tt)
+fig, ax = plt.subplots(1,1)
+ax.plot(xx,yy,'-', color='black')
+ax.plot(np.cos(theta), np.sin(theta),'o', label=r'$\theta_j$')
+ax.plot(np.cos(theta), np.zeros(N),'o', label=r'$x_j$')
+ax.plot([-1,1],[0,0], '-', color='black')
+ax.plot([0,np.cos(theta[1])], [0,np.sin(theta[1])], '-', color='gray')
+ax.text(0.25,0.075, r'$\theta$')
+ax.text(0.72,-0.09, r'$\cos(\theta)$')
+for t in theta:
+    ax.plot([np.cos(t),np.cos(t)], [0,np.sin(t)], ':', color='gray')
+ax.axis('equal')
+ax.set_xlabel('x')
+ax.legend(frameon=False);
+
+```
+
+For the $N^{th}$ order Chebyshev polynomial of the first kind, the locations of the peak and minimum values, that is, the extrema, are at
+
+$$x_j = \cos(\theta_j),$$
+$$\theta_j = \frac{\pi j}{N},$$
+
+with $j=0,\,\ldots,\,N$. These include $x=1$ and $x=-1$.
+
+
+## Chebyshev interpolation
+
+Recall that we are appproximating our function $u(t,x)$ as 
+
+$$ u(t,x)  = \sum_{n=0}^{N-1} c_n(t)T_n(x). $$
+
+We drop the time-dependence in the following.
+
+For interpolation, that is, evaluating the function $u(t,x)$ using the Chebyshev series approximation, the $x_j$ are taken as either the roots grid or the extrema grid (noting that N is one larger for the extrema grid than the roots grid). Using the extrema grid is convenient for solving PDEs since, in that case, there are grid points on the boundaries at $x=1$ and $x=-1$.
+
+Denote $T_n(x_j)$ as $T_{n,j}$. Then we then have
+
+$$u_j  = \sum_{n=0}^{N-1} c_nT_{n,j}.$$
+
+This defines a matrix multiplication, $u=T^Tc$, (that is, $T$ transpose), with $T_{n,j}$ components on row $n$ and column $j$:
+
+$$
+\left( \begin{matrix}
+u_0 \\
+u_1 \\
+u_2 \\
+u_3 \\
+u_4 \\
+\end{matrix} \right)
+= 
+\left[\begin{matrix}
+T_0(x_0) & T_1(x_0) & T_2(x_0) & T_3(x_0) \\
+T_0(x_1) & T_1(x_1) & T_2(x_1) & T_3(x_1) \\
+T_0(x_2) & T_1(x_2) & T_2(x_2) & T_3(x_2) \\
+T_0(x_3) & T_1(x_3) & T_2(x_3) & T_3(x_3) \\
+T_0(x_4) & T_1(x_4) & T_2(x_4) & T_3(x_4)
+\end{matrix}\right]
+\left( \begin{matrix}
+c_0 \\
+c_1 \\
+c_2 \\
+c_3 \\
+c_4
+\end{matrix} \right).
+$$
+
+The $c_n$ can be found by inversion.
+
+
+## Example, Chebyshev interpolation
+
+
+### Boilerplate libraries and functions
+For the code and examples below, use the following boilerplate libraries and functions
+
+As an example of interpolation, consider the famous Runge function
+
+$$u(x) = \frac{1}{1+25x^2}.$$
+
+Use Chebyshev interpolation for $N=9$ points using the roots grid, the extrema grid, and a uniform grid.
+
+```{python}
+#| echo: true
+
+import numpy as np
+import matplotlib.pyplot as plt
+import numpy.polynomial.chebyshev as cheb
+from scipy.special import eval_chebyt
+from scipy.fft import fft, ifft
+from scipy.fft import dct, idct, dctn, idctn
+from scipy.integrate import odeint
+import matplotlib.cm as cm
+
+def urunge(x):                              # the Runge function for testing
+    return 1.0/(1.0+25*x*x)
+
+def chebyterp(c,x): 
+    return cheb.chebvander(x,len(c)-1) @ c  # = sum_{n=0}^{N-1} c_nT_n(x)
+
+xx = np.linspace(-1,1,1000)                 # lots of points for plotting
+uu = urunge(xx)
+
+```
+
+::: {.hidden}
+$$
+\newcommand{\joinR}{\hspace{-.1em}}
+\newcommand{\RI}{\text{I}}
+\newcommand{\RII}{\text{I}\hspace{-.1em}\text{I}}
+$$
+:::
+
+
+```{python}
+#| echo: true
+
+def make_plot(N, do_unif=True):
+
+    #--------- roots grid, option 1, direct calculation (same as option 2 below)
+    
+    xcr = cheb.chebpts1(N)[::-1]            # roots grid
+    ucr = urunge(xcr)
+    
+    T = np.zeros((N,N))
+    for n in range(N):
+        for j in range(N):
+            T[n,j] = np.cos(np.pi*n/N*(j+0.5))
+    cr = np.linalg.inv(T.T) @ ucr
+    
+    #--------- roots grid, option 2, us numpy.polynomial.chebyshev module 
+    
+    cr = cheb.chebinterpolate(urunge, N-1)  # TT = T^T = cheb.chebvander(xcr, N-1); not needed...
+    
+    #--------- extrema grid
+    
+    xce = cheb.chebpts2(N)[::-1]            # extrema grid
+    uce = urunge(xce)
+    
+    for n in range(N):
+        for j in range(N):
+            T[n,j] = np.cos(np.pi*n*j/(N-1))
+    ce = np.linalg.inv(T.T) @ uce
+    
+    #--------- uniform grid, polyfit
+    
+    xu = np.linspace(-1,1,N)
+    p  = np.polyfit(xu, urunge(xu), N-1)
+    
+    #--------- plot results
+    
+    plt.plot(xx,urunge(xx), color='black', label='Exact', lw=2)
+    
+    plt.plot(xx, chebyterp(cr,xx), '-', color='blue', label='Cheby roots')
+    plt.plot(xcr, ucr, 'o', ms=7, fillstyle='full', color='blue')
+    
+    plt.plot(xx, chebyterp(ce,xx), '-', color='green', label='Cheby extrema')
+    plt.plot(xce, uce, '^', ms=7, fillstyle='full', color='green')
+    
+    if do_unif:
+        plt.plot(xx, np.polyval(p,xx), '-', color='red', label='Uniform')
+        plt.plot(xu, urunge(xu), 's', ms=7, fillstyle='none', color='red')
+    
+    plt.legend(frameon=False)
+    plt.xlabel('x')
+    plt.ylabel('u(x)');
+
+#-------------
+
+make_plot(9)
+
+```
+
+
+Note that the roots grid and extrema grid give similar results and similar errors. Interpolation using a uniform grid results in the Runge phenomena: large errors near the boundaries. These errors increase with increasing $N$. Conversely, the Chebyshev interpolation points result in fast convergence with increasing $N$. For example, for $N=19$, we have the plot below. (The uniform grid gives a Runge peak near $u(x)=30$, not shown.)
+
+```{python}
+
+make_plot(19, do_unif=False)
+
+```
+
+
+## Discrete cosine transform, roots grid
+
+
+The spectral coefficients $c_n$ can be computed using the discrete cosine transform (DCT). Most fast Fourier transform librarier provide implementations of the fast DCT and its inverse (IDCT). There are several of discrete cosine transforms. The Type-II transform corresponds to Chebyshev interpolation on the roots grid, and is given by
+
+\begin{align}
+&\text{DCT}_{\RII}:\phantom{Ixxx}a_n = 2\sum_{j=0}^{N-1} u_j\cos\left(\frac{\pi n}{N}(j+1/2)\right),\phantom{xx}n=0\ldots N-1, \\
+&\text{IDCT}_{\RII}:\phantom{xxx}u_j = \frac{1}{N}\left[\frac{c_0}{2} + \sum_{n=1}^{N-1}a_n\cos\left(\frac{\pi n}{N}(j+1/2)\right)\right],\phantom{xx}j=0\ldots N-1.
+\end{align}
+
+The subscript $\RII$ denotes the Type-II transform. This is the form used in the `scipy.fft.idct` function by default. On [Wikipedia](https://en.wikipedia.org/wiki/Discrete_cosine_transform), the factor of 2 on the DCT is moved to the IDCT. The leading $c_0$ term in the IDCT can be incorporated into the sum and the IDCT written as
+
+$$\text{IDCT}_{\RII}:\phantom{xxx}u_j = \frac{1}{N}\sum_{n=0}^{N-1}p_{\RII,n}a_n\cos\left(\frac{\pi n}{N}(j+1/2)\right),$${#eq-idct2}
+
+where
+$$\phantom{xx} p_{\RII,0}=\frac{1}{2},\,p_{\RII,n\ne 0}=1.$$
+
+The Chebyshev interpolation on the roots grid, denoted with subscript $r$, is given by
+
+$$u_j = \sum_{n=0}^{N-1}c_nT_n(x_{j,r}) = \sum_{n=0}^{N-1}c_n\cos\left(\frac{\pi n}{N}(j+1/2)\right),$$
+
+Comparing this to @eq-idct2 shows that the Chebyshev interpolation is just the IDCT with $c_n = a_np_{\RII,n}/N.$ 
+
+Denote the DCT and IDCT as $\mathcal{C}$ and $\mathcal{C}^{-1}$, respectively.
+
+**Summary:**
+
+$$u_j = \sum_{n=0}^{N-1}c_nT_n(x_{j,r}),$$
+$$c_n = \frac{a_np_{2,n}}{N}, $$
+$$\mathbf{a} = \mathcal{C}_{\RII}(\mathbf{u}), $$
+$$\mathbf{u} = \mathcal{C}_{\RII}^{-1}(\mathbf{a}).$$
+
+
+## Example, Runge function
+
+Interpolate the Runge function using $N=17$ points using a DCT.
+
+
+```{python}
+#| echo: true
+
+N = 17
+x = cheb.chebpts1(N)              # roots grid
+u = urunge(x)
+
+#---------- the crux:
+
+a = dct(u)
+p = np.ones(N); p[0]=0.5
+c = a*p/N
+
+uu_cheby = chebyterp(c,xx)         # interpolate the function everywhere
+
+#----------- plot results (code not shown)
+
+```
+
+```{python}
+
+plt.plot(xx,uu, label='Runge function')
+plt.plot(xx,chebyterp(c,xx), label='Chebyshev')
+plt.plot(x,u, 'o', label='Roots grid')
+plt.xlabel('x')
+plt.ylabel('u(x)')
+plt.legend(frameon=False)
+
+```
+
+## Domain mapping
+
+Chebyshev interpolation is done on a domain $-1\le x\le 1$. If we have a function on some other domain $\hat{x}$ with $a\le\hat{x}\le b$, we can do a simple linear mapping between the two domains. That is,
+
+$$x = 2\left(\frac{\hat{x}-a}{b-a}\right) - 1,$$
+$$\hat{x} = (x+1)\left(\frac{b-a}{2}\right) + 1.$$
+
+
+
+## Discrete cosine transform, extrema grid
+
+The Type-I DCT is given by
+
+\begin{align}
+&\text{DCT}_\RI:\phantom{Ixxx}a_n = 2\sum_{j=0}^{N-1}u_j\cos\left(\frac{\pi nj}{N-1}\right),\phantom{xx}n=0\ldots N-1, \\
+&\text{IDCT}_\RI:\phantom{xxx}u_j = \frac{1}{N-1}\sum_{n=0}^{N-1}a_n p_{\RI,n}\cos\left(\frac{\pi nj}{N-1}\right), \phantom{xx}j=0\ldots N-1,
+\end{align}
+
+where $p_{\RI,n}=1/2$ for $n=0$ and $n=N-1$, and $p_{\RI,n}=1$ otherwise. The Chebyshev interpolation on the extrema grid, denoted by subscript $e$, is given by
+
+$$u_j = \sum_{n=0}^{N-1}c_nT_n(x_{j,e}) = \sum_{n=0}^{N-1}c_n\cos\left(\frac{\pi nj}{N-1}\right).$$
+
+Comparing to the IDCT$_1$ shows that $c_n=a_np_{\RI,n}/(N-1).$
+
+**Summary:**
+
+$$u_j = \sum_{n=0}^{N-1}c_nT_n(x_{j,e}),$$
+$$c_n = \frac{a_np_{\RI,n}}{N-1}, $$
+$$\mathbf{a} = \mathcal{C}_\RI(\mathbf{u}), $$
+$$\mathbf{u} = \mathcal{C}_\RI(\mathbf{a}).$$
+
+### Example, Runge function with DCT
+
+Interpolate the Runge function using $N=17$ points using a DCT on the extrema grid. The key differences with the example on the roots grid is using the `type=1` argument in the `dct` function, and modifying the $p$ and $c$ arrays.
+
+```{python}
+#| echo: true
+
+N = 17
+x = cheb.chebpts2(N)               # extrema grid
+u = urunge(x)
+
+#---------- the crux:
+
+a = dct(u, type=1)
+p = np.ones(N); p[[0,N-1]]=0.5
+c = a*p/(N-1)
+
+uu_cheby = chebyterp(c,xx)         # interpolate the function everywhere
+
+#---------- plot results (code not shown)
+
+```
+
+```{python}
+
+plt.plot(xx,uu, label='Runge function')
+plt.plot(xx,uu_cheby, label='Chebyshev')
+plt.plot(x,u, 'o', label='Extrema grid')
+plt.xlabel('x')
+plt.ylabel('u(x)')
+plt.legend(frameon=False)
+
+```
+
+## Derivatives
+
+
+The derivative $\partial u(x)/\partial x$ can be expressed as a Chebyshev series:
+
+$$\frac{\partial u}{\partial x} = \sum_{n=0}^{N-1}c_n^\prime T_n(x),$$
+
+where $c_n^\prime$ are coefficients of the Chebyshev series of the derivative. These are computed using a recurrence relation from high to low $n$; see Boyd "Chebyshev and Fourier Spectral Methods," 2$^{nd}$ edition, page 298.
+
+$$(c^\prime_N=0),$$
+$$c^\prime_{N-1}=0,$$
+$$c^\prime_{n} = \gamma_n(c^\prime_{n+2} + 2(n+1)c_{n+1}),\;\; n=N-2,\ldots 0,$$
+
+where $\gamma_0=0.5$ and $\gamma_{n\ne 1}=1$.
+In `numpy.polynomial.chebyshev`, the `chebder` function returns the size $N-1$ array $c^\prime$; the last coefficient (for $n=N-1$) is not included since it is zero, so it is convenient to append that value. Note that `chebder` operates on $c_n$ and is independent of the $x$ grid used.
+
+
+```{python}
+#| echo: true
+
+N = 5
+c = np.array([0.1, 0.2, -3, 4, 5])
+cp = np.zeros(N)
+for n in range(N-2,-1,-1):
+    if n < N-2: cp[n] = cp[n+2]
+    cp[n] += 2*(n+1)*c[n+1]
+cp[0] *= 0.5
+
+#-------- compare direct calculation to numpy.polynomial.chebyshev.chebder
+
+print(cp)
+print(np.append(cheb.chebder(c), 0.0))
+
+```
+
+### Example, Runge derivative
+
+
+Interpolate the derivative of the Runge function for $N=17$ points. The Runge function is particularly challenging. For variety, the function $u_2(x) = 0.1e^{-2x}\sin(6x) + 6x$ is also shown.
+
+```{python}
+#| echo: true
+
+N = 17
+
+x = cheb.chebpts1(N)[::-1]             # roots grid
+u = urunge(x)
+p = np.ones(N); p[0] = 0.5
+
+c = p/N*dct(u)
+cp = np.append(cheb.chebder(c), 0.0)
+dudx_cheby = chebyterp(cp, xx)         # cheby interp derivative everywhere
+
+#---------- plot results (code not shown)
+```
+
+```{python}
+
+duu = -50*xx/(1+25*xx*xx)**2
+
+plt.plot(xx,duu, label='du/dx Runge')
+plt.plot(xx,dudx_cheby, label='du/dx Runge Cheby')
+
+#----------
+
+def func(x): return 0.1*np.exp(-2*x)*np.sin(6*x) + 6*x
+def derfunc(x): return 0.1*np.exp(-2*x)*(-2*np.sin(6*x) + 6*np.cos(6*x)) + 6
+
+x = cheb.chebpts1(N)[::-1]       # roots grid
+uf = func(x)
+a = dct(uf)
+p = np.ones(N); p[0]=0.5
+c = a*p/N
+cp = np.append(cheb.chebder(c), 0.0)
+
+#x = cheb.chebpts2(N)[::-1]       # extrema grid
+#uf = func(x)
+#a = dct(uf, type=1)
+#p = np.ones(N); p[[0,N-1]]=0.5
+#c = a*p/(N-1)
+#cp = np.append(cheb.chebder(c), 0.0)
+
+dudxf_cheby = chebyterp(cp, xx)
+
+plt.plot(xx,derfunc(xx), lw=6, color='silver', label=r'du$_2$/dx')
+plt.plot(xx,dudxf_cheby, lw=1, color='red',  label=r'du$_2$/dx Cheby')
+plt.xlabel('x')
+plt.ylabel('du/dx')
+plt.legend(frameon=False)
+
+```
+
+### Derivatives on the grid
+
+Denote $c^\prime = \mathcal{D}(c)$. Then we can write
+
+$$\frac{\partial \mathbf{u}}{\partial x} = \mathcal{C}_{\RII}^{-1}\left[\frac{N}{\mathbf{p_{\RII}}}\odot\mathcal{D}\left(\frac{\mathbf{p_{\RII}}}{N}\odot\mathcal{C}_{\RII}(\mathbf{u})\right) \right],$$
+
+on the roots grid, and
+
+$$\frac{\partial \mathbf{u}}{\partial x} = \mathcal{C}_\RI^{-1}\left[\frac{N-1}{\mathbf{p_\RI}}\odot\mathcal{D}\left(\frac{\mathbf{p_\RI}}{N-1}\odot\mathcal{C}_\RI(\mathbf{u})\right) \right],$$
+
+on the extrema grid.
+
+Here, $\mathbf{p_{\RII}}$ and $\mathbf{p_\RI}$ are vectors with components $p_{\RII,n}$ or $p_{\RI,n}$. Using fast cosine transforms, these evaluations should have computational cost $\mathcal{O}(N\log N)$. Note that $N/\mathbf{p_{\RII}}$ and $(N-1)/\mathbf{p_\RI}$, are computed elementwise.
+
+#### Second derivative
+
+
+A second derivative would be
+
+$$\frac{\partial^2 \mathbf{u}}{\partial x^2} = \mathcal{C}_\RI^{-1}\left[\frac{N-1}{\mathbf{p_\RI}}\odot\mathcal{D}^2\left(\frac{\mathbf{p_{\RI}}}{N-1}\odot\mathcal{C}_\RI(\mathbf{u})\right) \right],$$
+
+on the extrema grid, and similarly on the roots grid with subscript 2 replacing subscript 1 and $N$ replacing $N-1$. In this equation, $\mathcal{D}^2$ indicates two successive applications of the spectral derivative. Note that the $N-1$ factors cancel, giving
+
+$$\frac{\partial^2 \mathbf{u}}{\partial x^2} = \mathcal{C}_\RI^{-1}\left[\frac{1}{\mathbf{p_\RI}}\odot\mathcal{D}^2\left(\mathbf{p_\RI}\odot\mathcal{C}_\RI(\mathbf{u})\right) \right].$$
+
+## Example, 1D heat equation
+
+Solve the 1D heat equation for $u(t,x)$ with Dirichlet boundary conditions and a zero initial condition. Let $S=1.$
+
+$$\frac{\partial u}{\partial t} = \alpha\frac{\partial^2u}{\partial x^2} + S,$$
+$$u(t,-1)=0,$$
+$$u(t,1)=1,$$
+$$u(0,x)= 0.$$
+
+The pseudospectral solution is given by
+
+$$\frac{\partial \mathbf{u}}{\partial t} = \alpha\mathcal{C}_\RI^{-1}\left[\frac{1}{\mathbf{p_\RI}}\odot\mathcal{D}^2\left(\mathbf{p_\RI}\odot\mathcal{C}_\RI(\mathbf{u})\right) \right] + S,$$
+
+which is solved in time using the method of lines. 
+
+To include the **boundary conditions** we solve the problem on the extrema grid, which includes $x=-1$ and $x=1$. The array $\mathbf{u}$ will have the apppropriate boundary values, and the rates at the boundaries, $\partial u_0/\partial t$, $\partial u_{N-1}/\partial t$ are set to zero.
+
+```{python}
+#| echo: true
+
+def chebyspec(N, trun):
+
+    α = 1.0
+    S = 1.0
+    
+    uinit = np.zeros(N)
+    uinit[0]  = 1.0                       # Dirichlet BC at x=1
+    uinit[-1] = 0.0                       # Dirichlet BC at x=-1
+    
+    #---------------------
+    
+    def rates(u,t):
+    
+        p = np.ones(N); p[0]=p[-1]=0.5
+        
+        #-------- d2u/dx2
+        
+        a = dct(u, type=1)
+        c = a*p
+        cpp = np.append(cheb.chebder(c, 2),[0.0,0.0])
+        app = cpp / p
+        upp = idct(app, type=1)
+
+        #-------- compute the du/dt
+        
+        dudt = α*upp + S
+        dudt[0] = dudt[-1] = 0            # don't change BC (make du/dt = 0)
+    
+        return dudt
+
+    #---------------------
+
+    times = np.linspace(0,trun,9)
+    u = odeint(rates, uinit, times)
+
+    return times, u
+    
+#---------------------
+
+N = 20
+trun = 2.0
+times, u = chebyspec(N, trun)
+x = cheb.chebpts2(N)[::-1]
+
+#--------------------- plot results (code not shown)
+
+```
+
+```{python}
+
+col_list = cm.brg(np.linspace(0.0, 0.67, len(times)))
+for i,t in enumerate(times):
+    label = f't={times[i]}' if i==0 else f'{times[i]}'
+    plt.plot(x,u[i,:], lw=0.5, color=col_list[i], label=label)
+plt.xlabel(r'$x$')
+plt.ylabel(r'$u(t,x)$');
+plt.legend(frameon = False, fontsize=12)
+
+```
+
+
+
+## Neumann BCs, example
+
+
+Modify the boundary condition at $x=1$ to be the Neumann condition $u^\prime(t,x=1)=1$. Use a linear initial condition that satisfies the boundary conditions.
+
+Rewrite the PDE as
+$$\frac{\partial u}{\partial t} = \alpha\frac{\partial}{\partial x}\left(\frac{\partial u}{\partial x}\right) + S.$$
+
+The inner derivative is given by
+
+$$\frac{\partial \mathbf{u}}{\partial x} \equiv\mathbf{u}^\prime = \mathcal{C}_\RI^{-1}\left[\frac{1}{\mathbf{p_\RI}}\odot\mathcal{D}\left(\mathbf{p_\RI}\odot\mathcal{C}_\RI(\mathbf{u})\right) \right].$$
+
+A Neumann condition $\partial u/\partial x=\beta$ for some given $\beta$ is imposed on the first or last element of the $u^\prime$ array once it is computed.
+
+We then write the pseudospectral solution as
+
+$$\frac{\partial \mathbf{u}}{\partial t} = \alpha\mathcal{C}_\RI^{-1}\left[\frac{1}{\mathbf{p_\RI}}\odot\mathcal{D}\left(\mathbf{p_\RI}\odot\mathcal{C}_\RI(\mathbf{u}^\prime)\right) \right] + S.$$
+
+```{python}
+
+#| echo: true
+
+def chebyspec_Neumann(N):
+
+    α = 1.0
+    trun = 3 * 2.0/α
+    S = 1.0
+    
+    x = cheb.chebpts2(N)[::-1]
+    uinit = np.zeros(N)                  # initial condition that satisfies u(-1)=0, u'(1)=1
+    for i in range(N):
+        uinit[i] = 2.0 + (x[i] - x[0])
+
+    
+    #---------------------
+    
+    def rates(u,t):
+
+        p = np.ones(N); p[0]=p[-1]=0.5
+        
+        #-------- compute uprime
+        
+        a = dct(u, type=1)
+        c = a*p
+        cp = np.append(cheb.chebder(c), 0.0)
+        ap = cp / p
+        up = idct(ap, type=1)
+        up[0] = 1.0                      # impose Neumann BC at x=1
+        
+        #-------- d2u/dx2
+
+        ap = dct(up, type=1)
+        cp = ap*p
+        cpp = np.append(cheb.chebder(cp), 0.0)
+        app = cpp/p
+        upp = idct(app, type=1)
+        
+        #-------- compute the du/dt rates
+
+        dudt = α*upp + S
+        dudt[-1] = 0                      # don't change the Dirichlet BC (make du/dt = 0)
+    
+        return dudt
+        
+    #---------------------
+    
+    times = np.linspace(0,trun,9)
+    u = odeint(rates, uinit, times)
+
+    return times, u
+    
+#--------------------- solve the problem
+
+N = 20
+times, u = chebyspec_Neumann(N)
+x = cheb.chebpts2(N)[::-1]
+
+#--------------------- plot results (code not shown)
+
+```
+
+```{python}
+
+col_list = cm.brg(np.linspace(0.0, 0.67, len(times)))
+for i,t in enumerate(times):
+    label = f't={times[i]}' if i==0 else f'{times[i]}'
+    plt.plot(x,u[i,:], lw=0.5, color=col_list[i], label=label)
+plt.xlabel(r'$x$')
+plt.ylabel(r'$u(t,x)$');
+plt.legend(frameon = False, fontsize=12)
+
+
+```
+## Robin BCs
+A Robin condition is done the same way as the Neumann condition. For Neumann, we impose $\partial u/\partial x=\beta$ at the boundary, for some given $\beta$ that defines the Neumann boundary condition. For Robin, since we know $u$ at the boundary (at the given time), we can impose $\partial u/\partial x=\gamma u+\beta$ at the boundary, where $\gamma$ and $\beta$ are some constants for the Robin condition.
+
+
+
+## 2D transforms
+
+The Type-II cosine transforms (for the roots grid) in two dimensions are given by
+
+\begin{align}
+&\text{IDCT}_{\RII}:\phantom{xxx}u_{j,k} = \frac{1}{N_x}\sum_{n=0}^{N_x-1}p_{\RII,n}\left[ \frac{1}{N_y}\sum_{m=0}^{N_y-1}p_{\RII,m}a_{n,m}\cos\left(\frac{\pi m}{N_x}(k+1/2)\right) \right]\cos\left(\frac{\pi n}{N_y}(j+1/2)\right), \\
+&\text{DCT}_{\RII}:\phantom{Ixxx}a_{n,m} = 2\sum_{j=0}^{N_x-1}\underbrace{\left[ 2\sum_{k=0}^{N_y-1}u_{j,k}\cos\left(\frac{\pi m}{N_x}(k+1/2)\right) \right]}_{A_j}\cos\left(\frac{\pi n}{N_y}(j+1/2)\right). \\
+\end{align}
+
+This presentation of the transforms makes it clear that the 2D tranform is just a nested 1D transform. For the 2D DCT, the term in brackets is a 1D DCT over grid points $k$ for given $j$. This results in $A_j$, which is an array with elements corresponding to $m=0,\,\ldots,\,N_y-1$, for each $j$. That is, $A$ is a matrix with elements $A_{j,m}$. The outer sum is also a 13 DCT over grid points $j$ for each $m$.
+
+The Type-I cosine transforms (for the extrema grid) in two dimensions are given by
+
+\begin{align}
+&\text{IDCT}_{\RI}:\phantom{xxx}u_{j,k} = \frac{1}{N_x-1}\sum_{n=0}^{N_x-1}p_{\RI,n}\left[ \frac{1}{N_y-1}\sum_{m=0}^{N_y-1}p_{\RI,m}a_{n,m}\cos\left(\frac{\pi mk}{N_x-1}\right) \right]\cos\left(\frac{\pi nj}{N_y-1}\right), \\
+&\text{DCT}_{\RI}:\phantom{Ixxx}a_{n,m} = 2\sum_{j=0}^{N_x-1}\underbrace{\left[ 2\sum_{k=0}^{N_y-1}u_{j,k}\cos\left(\frac{\pi mk}{N_x-1}\right) \right]}_{A_j}\cos\left(\frac{\pi nj}{N_y-1}\right). \\
+\end{align}
+
+```{python}
+#| echo: true
+
+type = 1
+
+#---------- 2D DCT, type I or II
+
+def dct2D(u):
+    a = np.empty_like(u)
+    Nx,Ny = np.shape(u)
+    for j in range(Nx):
+        a[j,:] = dct(u[j,:],type=type)
+    for m in range(Ny):
+        a[:,m] = dct(a[:,m],type=type)
+    return a
+    
+#---------- 2D IDCT, type II
+
+def idct2D(a):
+    u = np.empty_like(a)
+    Nx,Ny = np.shape(a)
+    for n in range(Nx):
+        u[n,:] = idct(a[n,:],type=type)
+    for k in range(Ny):
+        u[:,k] = idct(u[:,k],type=type)
+    return u
+
+#---------- (These give identical results to dctn and idctn)
+
+a = np.random.rand(4,3)
+np.allclose(dct2D(a), dctn(a, type=type))
+
+```
+
+
+### Derivatives
+
+On a two-dimensional grid, partial derivatives in a direction, say $x$, are computed along a line of $x$ at a given $y$ exactly as for one-dimensional cases. On the extrema grid, we have
+
+$$\frac{\partial \mathbf{u}_k}{\partial x} = \mathcal{C}_\RI^{-1}\left[\frac{1}{\mathbf{p_\RI}}\odot\mathcal{D}\left(\mathbf{p_\RI}\odot\mathcal{C}_\RI(\mathbf{u}_k)\right) \right],$$
+
+where $\mathbf{u}_k$ is the array of $u$ values at all $j$ (in the $x$ direction) at a given $k$ ($y$ direction).
+
+## Example, 2D heat equation
+
+
+Solve the 2D heat equation with zero Dirichlet boundaries and a unity initial condition in the domain center. We have $u=u(t,x,y)$, $\Gamma=1$, $L_x=L_y=2$ and the domains $x$ and $y$ range from -1 to 1.
+
+$$\frac{\partial u}{\partial t} = \Gamma\frac{\partial^2u}{\partial x^2} +\Gamma\frac{\partial^2u}{\partial x^2}.$$ 
+
+Solutions using both psuedospectral and finite difference with a second-order central difference approximation are implemented. In Python, for $N_x=N_y=21$, the psuedospectral method is considerably slower.
+
+
+```{python}
+#| echo: true
+
+doFD = False
+
+#--------- setup
+Lx = 2.0
+Ly = 2.0
+Nx = 21
+Ny = 21
+G = 1.0
+trun = 0.2
+ntimes = 11
+    
+if doFD:
+    x = np.linspace(-1.0, 1.0, Nx)
+    y = np.linspace(-1.0, 1.0, Ny)
+else:
+    x = cheb.chebpts2(Nx)[::-1]
+    y = cheb.chebpts2(Ny)[::-1]
+
+X,Y = np.meshgrid(x,y)
+X = X.T; Y = Y.T
+u0 = np.zeros((Nx,Ny))
+for j in range(Nx):
+    for k in range(Ny):
+        if x[j]>=-0.5 and x[j]<=0.5 and y[k]>=-0.5 and y[k]<=0.5 : u0[j,k] = 1.0
+
+#--------- define PDE for psuedospectral
+
+def rates_cheby(uu, t):
+    u = np.reshape(uu, (Nx,Ny))           # convert 1D array to 2D for eval 
+
+    d2udx2 = np.empty((Nx, Ny))
+    d2udy2 = np.empty((Nx, Ny))
+    for k in range(Ny): 
+        c = dct(u[:,k], type=1);                   c[0]*=0.5; c[-1]*=0.5
+        app = np.append(cheb.chebder(c, 2),[0,0]); app[0]*=2; app[-1]*=2
+        d2udx2[:,k] = idct(app, type=1)
+    for j in range(Nx): 
+        c = dct(u[j,:], type=1);                   c[0]*=0.5; c[-1]*=0.5
+        app = np.append(cheb.chebder(c, 2),[0,0]); app[0]*=2; app[-1]*=2
+        d2udy2[j,:] = idct(app, type=1)
+
+    dudt = G*(d2udx2 + d2udy2)
+    dudt[:,0] = dudt[:,-1] = 0.0
+    dudt[0,:] = dudt[-1,:] = 0.0
+
+    return np.reshape(dudt, shape=Nx*Ny)
+
+#--------- define PDE for finite difference
+
+def rates_FD(uu, t):
+
+    u = np.reshape(uu, (Nx,Ny))           # convert 1D array to 2D for eval 
+
+    i = np.arange(1,Nx-1); ip=i+1; im=i-1
+    j = np.arange(1,Ny-1); jp=j+1; jm=j-1
+
+    dx = x[1]-x[0]
+    dy = y[1]-y[0]
+
+    dudt = np.zeros((Nx,Ny))
+    dudt[IJ(i,j)] =  G*( (u[IJ(im,j)] - 2.0*u[IJ(i,j)] + u[IJ(ip,j)])/dx**2 + 
+                         (u[IJ(i,jm)] - 2.0*u[IJ(i,j)] + u[IJ(i,jp)])/dy**2 )
+    dudt[:,0] = dudt[:,-1] = 0.0
+    dudt[0,:] = dudt[-1,:] = 0.0
+
+    return np.reshape(dudt, shape=Nx*Ny)
+
+#--------- solve the ODE system (method of lines)
+
+uu0 = np.reshape(u0, shape=Nx*Ny)          # convert 2D array to 1D for solve
+times = np.linspace(0,trun, ntimes)
+
+rates = rates_FD if doFD else rates_cheby
+uu = odeint(rates, uu0, times)       # solve the problem
+
+#--------- (plot solution at three times, not shown)
+
+```
+
+
+```{python}
+
+fig, ax = plt.subplots(1,3, figsize=(12,4))
+
+levels = np.linspace(np.min(uu),np.max(uu),51)
+ax[0].contourf(X,Y, np.reshape(uu[0,:], shape=(Nx,Ny)),  100, levels=levels);
+ax[1].contourf(X,Y, np.reshape(uu[1,:], shape=(Nx,Ny)), 100, levels=levels);
+ax[2].contourf(X,Y, np.reshape(uu[-1,:], shape=(Nx,Ny)), 100, levels=levels);
+ax[0].set_title('t=0')
+ax[1].set_title(f't={times[9]}')
+ax[2].set_title(f't={times[-1]}');
+for i in range(3): 
+    ax[i].set_xlabel('X'); 
+    ax[i].set_xticks([-1, 0, 1])
+    ax[i].set_aspect('equal', adjustable='box');
+ax[0].set_yticks([-1, 0, 1])
+ax[0].set_ylabel('Y');
+ax[1].set_yticks([]);
+ax[2].set_yticks([]);
+
+center_tfinal = np.reshape(uu[-1,:], (Nx,Ny))
+print(f'u({trun},0,0) = {center_tfinal[10,10]}')
+
+
+```
+
+
+## Notes
+
+Note that for explicit solvers as have been discussed in the examples, the stable time step size $\tau$ for advective terms (first derivatives) is $\tau\sim\Delta x$. For diffusive terms (second derivatives) $\tau\sim\Delta x^2$. Fourier pseudospectral methods use a uniform grid so that $\Delta x\sim 1/N$ and $\tau\sim 1/N$ for advection and $\tau\sim 1/N^2$ for diffusion. But Chebyshev interpolation uses a nonuniform grid with $\Delta x = 1-\cos(\pi/N)$ for $N+1$ points. The first two terms of a Taylor expansion of $\cos(x)$ are $1-x^2/2$, so that $\Delta x\sim 1/N^2$, and $\tau\sim 1/N^2$ for advection and $\tau\sim 1/N^4$ for diffusion. This is a significant constraint. Boyd ("Chebyshev and Fourier Spectral Methods") discusses using implicit or semi-implicit approaches.
+
+In pseudospectral methods, the Fourier or Chebyshev basis functions are used to evaluate derivatives accurately. From that perspective, it is not so important whether the domain has periodic or non-periodic boundary conditions. For example, a uniform grid could be used on a problem with Dirichlet boundaries and derivatives computed using a Fourier basis if the domain were mirrored so as to make continuous periodic profiles appropriate for the Fourier basis. The accurate derivatives could then be used to advance a time-dependent problem. 
+
+Consider a vertical jet in a free stream with nonperiodic far-stream side boundaries. A Chebyshev pseudospectral method would use a grid with the highest clustering of points near the free-stream boundaries where nothing is happening. This could be mitigated by taking the domain as periodic since it will be periodically continuous (given the free stream on either side), and then derivatives computed using a uniform grid and a Fourier basis. In pipe flows, most of the action happens near the walls and a finer clustering near the wall may be desired.
+

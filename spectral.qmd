@@ -1,0 +1,71 @@
+---
+title: An introduction to pseudospectral methods
+execute:
+    echo: false
+format:
+    html:
+        toc: true
+        toc-depth: 4
+        toc-expand: true
+        toc-title: Contents
+---
+        
+This document presents an introduction to pseudospectral methods for solution of partial differential equations. The focus is on
+
+- periodic domains using Fourier series, 
+- nonperiodic domains using Chebyshev series, 
+- one and two spatial dimensions,
+- boundary conditions including periodic, Dirichlet, Nuemann, and Robin.
+
+Suppose we have a PDE for an unsteady, one-dimensional conservation law with some diffusive flux $q=-\Gamma\partial u/\partial x$, and a source term $S$:
+$$
+\frac{\partial u}{\partial t} = -\frac{\partial}{\partial x}\left(\Gamma\frac{\partial u}{\partial x}\right) + S.
+$${#eq-pde}
+
+Here, $u = u(t,x)$, $S$ is a source term, and $\Gamma$ is a diffusivity. If $\Gamma$ is a function of $u$, or if $S$ is a nonlinear function of $u$, then the problem is nonlinear.
+
+We approximate the function $u(t,x)$ as 
+$$
+u(t,x)  = \sum_{n=0}^{N-1} c_n(t)\phi_n(x).
+$${#eq-u_series}
+That is, $u$ is approximated as a linear combination of basis functions $\phi_n(x)$, which depend only on $x$, and $c_n$ are coefficients that depend only on $t$. (For simplicity, we use the same notation for the solution $u(t,x)$ of the PDE, and its $N$-term series approximation.)
+
+For periodic spatial domains with period $L$, the basis functions $\phi_n$ are taken as
+$$
+\phi_n(x) = e^{2\pi inx/L}.
+$$
+We can refer to these $\phi_n$ as *Fourier modes*.
+
+For nonperiodic spatial domains with $-1\le x\le 1$, we will use
+$$
+\phi_n(x) = T_n(x),
+$$
+where $T_n(x)$ is a [Chebyshev polynomial](https://en.wikipedia.org/wiki/Chebyshev_polynomials) of first kind.
+
+Other basis functions can be used for $\phi_n$, and the form of @eq-u_series is used in other methods, such as Finite Element and Galerkin methods. The latter is a spectral method, as opposed to the pseudospectral method discussed here. Importantly, for spectral and pseudospectral methods, the basis functions $\phi_n$ are global (they span the domain), rather than local (nonzero around a given location), as in Finite Element methods. This global character of spectral and pseudospectral methods contributes to the high accuracy and convergence rates of the methods. The Fourier modes and Chebyshev polynomials are discussed in more detail below.
+
+In the pseudospectral method, the coefficients $c_n$ are evaluated by requiring that $u(t,x)$ satisfy the PDE at $N$ discrete grid points called *collocation* points (sometimes also called called *interpolation* points). The pseudospectral method is also sometimes called the collocation method. We denote the collocation points as $x_j$ for $j=0,\,\ldots N-1$, and $u_j\equiv u(x_j)$. Similarly, $\Gamma_j$ and $S_j$ are $\Gamma$ and $S$ evaluated at $x_j$. Then
+$$
+u_j  = \sum_{n=0}^{N-1} c_n(t)\phi_n(x_j).
+$${#eq-u_series2}
+
+In the following sections, @eq-u_series2 will be related to the inverse discrete Fourier transform (IDFT) or the inverse discrete cosine transform (IDCT). These then allow evaluation of spatial derivatives at the collocation (grid) points, so that a PDE, such as that in @eq-pde can be solved using, e.g., the method of lines (MOL), where the PDE is converted to a system of ODEs at each point,
+$$
+\frac{\partial u_j}{\partial t} = -\frac{\partial}{\partial x}\left(\Gamma_j\frac{\partial u_j}{\partial x}\right)_j + S_j.
+$${#eq-mol}
+Here, $\partial u_j/\partial x$ denotes the partial derivative of $u(t,x)$ evaluated at $x_j$; and similarly for the $()_j$ term. @eq-mol is then solved as a system of ODEs using some ODE solver, such as the fourth-order Runge-Kutta method. Importantly, the pseudospectral method solves the PDE in physical space, with derivatives evaluated as noted, and nonlinearity poses no special difficultly. This will be demonstrated in examples below.
+
+# Fourier pseudospectral methods
+
+
+Here, we relate @eq-u_series2 with $\phi_n(x)=e^{2\pi inx/L}$ to the inverse discrete Fourier transform (IDFT), and show examples of computing derivatives and solving PDEs.
+
+{{< include fourier/fourier.qmd >}}
+
+
+# Chebyshev pseudospectral methods
+
+
+Here, we relate @eq-u_series2 with $\phi_n(x)=T_n(x)$ to the inverse discrete cosine transform (IDCT), and show examples of computing derivatives and solving PDEs.
+
+{{< include cheby/cheby.qmd >}}
