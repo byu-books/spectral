@@ -1,3 +1,8 @@
+
+An introduction to pseudospectral methods: Fourier and Chebyshev
+
+Document is hosted at [ignite.byu.edu/spectral](https://ignite.byu.edu/spectral)
+
 Compile as:
 `quarto render spectral.qmd --output index.html`
 
