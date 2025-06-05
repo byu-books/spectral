@@ -60,7 +60,7 @@ Here, $\partial u_j/\partial x$ denotes the partial derivative of $u(t,x)$ evalu
 
 Here, we relate @eq-u_series2 with $\phi_n(x)=e^{2\pi inx/L}$ to the inverse discrete Fourier transform (IDFT), and show examples of computing derivatives and solving PDEs.
 
-{{< include fourier/fourier.qmd >}}
+{{< include fourier.qmd >}}
 
 
 # Chebyshev pseudospectral methods
@@ -68,4 +68,4 @@ Here, we relate @eq-u_series2 with $\phi_n(x)=e^{2\pi inx/L}$ to the inverse dis
 
 Here, we relate @eq-u_series2 with $\phi_n(x)=T_n(x)$ to the inverse discrete cosine transform (IDCT), and show examples of computing derivatives and solving PDEs.
 
-{{< include cheby/cheby.qmd >}}
+{{< include cheby.qmd >}}
