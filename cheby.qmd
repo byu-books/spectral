@@ -46,7 +46,12 @@ In general, a recurrence relation defines $T_n$ given $T_0$ and $T_1$. That is,
 
 $$T_n(x) = 2xT_{n-1}(x) - T_{n-2}(x).$$ 
 
-The domain of interest is $-1\le x \le 1$ and the $T_n$ are bounded between -1 and 1. This is due to the relation to the cosine function. The Chebyshev polynomials are defined as
+The domain of interest is $-1\le x \le 1$ and the $T_n$ are bounded between -1 and 1. This is due to the relation to the cosine function. If we have a function on some other domain $\hat{x}$ with $a\le\hat{x}\le b$, we can do a simple linear mapping between the two domains. That is,
+
+$$x = 2\left(\frac{\hat{x}-a}{b-a}\right) - 1,$$
+$$\hat{x} = (x+1)\left(\frac{b-a}{2}\right) + 1.$$
+
+The Chebyshev polynomials are defined as
 
 $$T_n(\cos\theta) = \cos(n\theta).$$
 
@@ -98,7 +103,7 @@ where $y^2 = 1-x^2$ is used, that is, $\sin^2\theta = 1-\cos^2\theta$.
 
 --------------------------------------
 
-The periodic, trigonometric character of the Chebyshev polynomials, and the relation between the angle $\theta$ and its projection to $x$, given by $x=\cos\theta$ is shown in the figure below. $\theta$ increases from 0 to $\pi$, traversing the half circle once, while the angle $n\theta$ moves faster, in proportion to $n$. That is, for $n=2$, $n\theta$ varies from 0 to $2\pi$ as $\theta$ varies from 0 to $\pi$. For $n=3$, $n\theta$ varies from 0 to 3\pi$ as $\theta$ varies from 0 to $\pi$. $T_n$ is $\cos{n\theta}$, so $T_n$ varies from 1 to -1 or -1 to 1 $n$ times as $\theta$ varies. The math is obvious but the point is to visualize the behavior. The figure below shows $\cos(n\theta)$, which are the value of $T_n$, plotted versus $\theta$ for $0\le\theta\le \pi$ on the left, and $\cos(n\theta)$ plotted versus $x=\cos\theta$ on the right. The right plot is just the plot of $T_n(x)$ versus $x$.
+The periodic, trigonometric character of the Chebyshev polynomials, and the relation between the angle $\theta$ and its projection to $x$, given by $x=\cos\theta$ is shown in the figure below. $\theta$ increases from 0 to $\pi$, traversing the half circle once, while the angle $n\theta$ moves faster, in proportion to $n$. That is, for $n=2$, $n\theta$ varies from 0 to $2\pi$ as $\theta$ varies from 0 to $\pi$. For $n=3$, $n\theta$ varies from 0 to 3$\pi$ as $\theta$ varies from 0 to $\pi$. $T_n$ is $\cos{n\theta}$, so $T_n$ varies from 1 to -1 or -1 to 1 $n$ times as $\theta$ varies. The math is obvious but the point is to visualize the behavior. The figure below shows $\cos(n\theta)$, which are the value of $T_n$, plotted versus $\theta$ for $0\le\theta\le \pi$ on the left, and $\cos(n\theta)$ plotted versus $x=\cos\theta$ on the right. The right plot is just the plot of $T_n(x)$ versus $x$.
 
 
 ```{python}
@@ -218,7 +223,7 @@ x = np.cos(theta)
 y = np.sin(theta)
 
 for n in range(nn):
-    z = np.cos((n+1)*theta)
+    z = np.cos(n*theta)
     visible = True if n==5 else False
     fig.add_scatter3d(x=x,y=y,z=z, mode='lines', line=dict(color='blue'), visible=visible)
 
@@ -298,7 +303,7 @@ ax.plot(np.cos(theta), np.zeros(N),'o', label=r'$x_j$')
 ax.plot([-1,1],[0,0], '-', color='black')
 ax.plot([0,np.cos(theta[1])], [0,np.sin(theta[1])], '-', color='gray')
 ax.text(0.25,0.075, r'$\theta$')
-ax.text(0.72,-0.09, r'$\cos(\theta)$')
+ax.text(0.72,-0.09, r'$x=\cos(\theta)$')
 for t in theta:
     ax.plot([np.cos(t),np.cos(t)], [0,np.sin(t)], ':', color='gray')
 ax.axis('equal')
@@ -337,7 +342,6 @@ u_0 \\
 u_1 \\
 u_2 \\
 u_3 \\
-u_4 \\
 \end{matrix} \right)
 = 
 \left[\begin{matrix}
@@ -345,14 +349,12 @@ T_0(x_0) & T_1(x_0) & T_2(x_0) & T_3(x_0) \\
 T_0(x_1) & T_1(x_1) & T_2(x_1) & T_3(x_1) \\
 T_0(x_2) & T_1(x_2) & T_2(x_2) & T_3(x_2) \\
 T_0(x_3) & T_1(x_3) & T_2(x_3) & T_3(x_3) \\
-T_0(x_4) & T_1(x_4) & T_2(x_4) & T_3(x_4)
 \end{matrix}\right]
 \left( \begin{matrix}
 c_0 \\
 c_1 \\
 c_2 \\
 c_3 \\
-c_4
 \end{matrix} \right).
 $$
 
@@ -479,7 +481,7 @@ The spectral coefficients $c_n$ can be computed using the discrete cosine transf
 
 \begin{align}
 &\text{DCT}_{\RII}:\phantom{Ixxx}a_n = 2\sum_{j=0}^{N-1} u_j\cos\left(\frac{\pi n}{N}(j+1/2)\right),\phantom{xx}n=0\ldots N-1, \\
-&\text{IDCT}_{\RII}:\phantom{xxx}u_j = \frac{1}{N}\left[\frac{c_0}{2} + \sum_{n=1}^{N-1}a_n\cos\left(\frac{\pi n}{N}(j+1/2)\right)\right],\phantom{xx}j=0\ldots N-1.
+&\text{IDCT}_{\RII}:\phantom{xxx}u_j = \frac{1}{N}\left[\frac{a_0}{2} + \sum_{n=1}^{N-1}a_n\cos\left(\frac{\pi n}{N}(j+1/2)\right)\right],\phantom{xx}j=0\ldots N-1.
 \end{align}
 
 The subscript $\RII$ denotes the Type-II transform. This is the form used in the `scipy.fft.idct` function by default. On [Wikipedia](https://en.wikipedia.org/wiki/Discrete_cosine_transform), the factor of 2 on the DCT is moved to the IDCT. The leading $c_0$ term in the IDCT can be incorporated into the sum and the IDCT written as
@@ -500,12 +502,12 @@ Denote the DCT and IDCT as $\mathcal{C}$ and $\mathcal{C}^{-1}$, respectively.
 **Summary:**
 
 $$u_j = \sum_{n=0}^{N-1}c_nT_n(x_{j,r}),$$
-$$c_n = \frac{a_np_{2,n}}{N}, $$
+$$c_n = \frac{a_np_{\RII,n}}{N}, $$
 $$\mathbf{a} = \mathcal{C}_{\RII}(\mathbf{u}), $$
 $$\mathbf{u} = \mathcal{C}_{\RII}^{-1}(\mathbf{a}).$$
 
 
-## Example, Runge function
+## Example, Runge function with DCT$_{II}$
 
 Interpolate the Runge function using $N=17$ points using a DCT.
 
@@ -540,13 +542,6 @@ plt.legend(frameon=False)
 
 ```
 
-## Domain mapping
-
-Chebyshev interpolation is done on a domain $-1\le x\le 1$. If we have a function on some other domain $\hat{x}$ with $a\le\hat{x}\le b$, we can do a simple linear mapping between the two domains. That is,
-
-$$x = 2\left(\frac{\hat{x}-a}{b-a}\right) - 1,$$
-$$\hat{x} = (x+1)\left(\frac{b-a}{2}\right) + 1.$$
-
 
 
 ## Discrete cosine transform, extrema grid
@@ -562,7 +557,7 @@ where $p_{\RI,n}=1/2$ for $n=0$ and $n=N-1$, and $p_{\RI,n}=1$ otherwise. The Ch
 
 $$u_j = \sum_{n=0}^{N-1}c_nT_n(x_{j,e}) = \sum_{n=0}^{N-1}c_n\cos\left(\frac{\pi nj}{N-1}\right).$$
 
-Comparing to the IDCT$_1$ shows that $c_n=a_np_{\RI,n}/(N-1).$
+Comparing to the IDCT$_{\RI}$ shows that $c_n=a_np_{\RI,n}/(N-1).$
 
 **Summary:**
 
@@ -571,7 +566,8 @@ $$c_n = \frac{a_np_{\RI,n}}{N-1}, $$
 $$\mathbf{a} = \mathcal{C}_\RI(\mathbf{u}), $$
 $$\mathbf{u} = \mathcal{C}_\RI(\mathbf{a}).$$
 
-### Example, Runge function with DCT
+
+### Example, Runge function with DCT$_I$
 
 Interpolate the Runge function using $N=17$ points using a DCT on the extrema grid. The key differences with the example on the roots grid is using the `type=1` argument in the `dct` function, and modifying the $p$ and $c$ arrays.
 
@@ -605,6 +601,7 @@ plt.legend(frameon=False)
 
 ```
 
+
 ## Derivatives
 
 
@@ -618,7 +615,7 @@ $$(c^\prime_N=0),$$
 $$c^\prime_{N-1}=0,$$
 $$c^\prime_{n} = \gamma_n(c^\prime_{n+2} + 2(n+1)c_{n+1}),\;\; n=N-2,\ldots 0,$$
 
-where $\gamma_0=0.5$ and $\gamma_{n\ne 1}=1$.
+where $\gamma_0=0.5$ and $\gamma_{n\ne 0}=1$.
 In `numpy.polynomial.chebyshev`, the `chebder` function returns the size $N-1$ array $c^\prime$; the last coefficient (for $n=N-1$) is not included since it is zero, so it is convenient to append that value. Note that `chebder` operates on $c_n$ and is independent of the $x$ grid used.
 
 
@@ -643,7 +640,7 @@ print(np.append(cheb.chebder(c), 0.0))
 ### Example, Runge derivative
 
 
-Interpolate the derivative of the Runge function for $N=17$ points. The Runge function is particularly challenging. For variety, the function $u_2(x) = 0.1e^{-2x}\sin(6x) + 6x$ is also shown.
+Interpolate the derivative of the Runge function for $N=17$ points. The Runge function is particularly challenging. For variety, the function $u_v(x) = 0.1e^{-2x}\sin(6x) - 8x$ is also shown.
 
 ```{python}
 #| echo: true
@@ -670,8 +667,8 @@ plt.plot(xx,dudx_cheby, label='du/dx Runge Cheby')
 
 #----------
 
-def func(x): return 0.1*np.exp(-2*x)*np.sin(6*x) + 6*x
-def derfunc(x): return 0.1*np.exp(-2*x)*(-2*np.sin(6*x) + 6*np.cos(6*x)) + 6
+def func(x): return 0.1*np.exp(-2*x)*np.sin(6*x) - 8*x
+def derfunc(x): return 0.1*np.exp(-2*x)*(-2*np.sin(6*x) + 6*np.cos(6*x)) - 8
 
 x = cheb.chebpts1(N)[::-1]       # roots grid
 uf = func(x)
@@ -689,11 +686,11 @@ cp = np.append(cheb.chebder(c), 0.0)
 
 dudxf_cheby = chebyterp(cp, xx)
 
-plt.plot(xx,derfunc(xx), lw=6, color='silver', label=r'du$_2$/dx')
-plt.plot(xx,dudxf_cheby, lw=1, color='red',  label=r'du$_2$/dx Cheby')
+plt.plot(xx,derfunc(xx), lw=6, color='silver', label=r'du$_v$/dx')
+plt.plot(xx,dudxf_cheby, lw=1, color='red',  label=r'du$_v$/dx Cheby')
 plt.xlabel('x')
 plt.ylabel('du/dx')
-plt.legend(frameon=False)
+plt.legend(frameon=False, loc=(0.53,0.18))
 
 ```
 
@@ -718,7 +715,7 @@ A second derivative would be
 
 $$\frac{\partial^2 \mathbf{u}}{\partial x^2} = \mathcal{C}_\RI^{-1}\left[\frac{N-1}{\mathbf{p_\RI}}\odot\mathcal{D}^2\left(\frac{\mathbf{p_{\RI}}}{N-1}\odot\mathcal{C}_\RI(\mathbf{u})\right) \right],$$
 
-on the extrema grid, and similarly on the roots grid with subscript 2 replacing subscript 1 and $N$ replacing $N-1$. In this equation, $\mathcal{D}^2$ indicates two successive applications of the spectral derivative. Note that the $N-1$ factors cancel, giving
+on the extrema grid, and similarly on the roots grid with subscript $\RII$ replacing subscript $\RI$ and $N$ replacing $N-1$. In this equation, $\mathcal{D}^2$ indicates two successive applications of the spectral derivative. Note that the $N-1$ factors cancel, giving
 
 $$\frac{\partial^2 \mathbf{u}}{\partial x^2} = \mathcal{C}_\RI^{-1}\left[\frac{1}{\mathbf{p_\RI}}\odot\mathcal{D}^2\left(\mathbf{p_\RI}\odot\mathcal{C}_\RI(\mathbf{u})\right) \right].$$
 
@@ -908,16 +905,16 @@ The Type-II cosine transforms (for the roots grid) in two dimensions are given b
 
 \begin{align}
 &\text{IDCT}_{\RII}:\phantom{xxx}u_{j,k} = \frac{1}{N_x}\sum_{n=0}^{N_x-1}p_{\RII,n}\left[ \frac{1}{N_y}\sum_{m=0}^{N_y-1}p_{\RII,m}a_{n,m}\cos\left(\frac{\pi m}{N_x}(k+1/2)\right) \right]\cos\left(\frac{\pi n}{N_y}(j+1/2)\right), \\
-&\text{DCT}_{\RII}:\phantom{Ixxx}a_{n,m} = 2\sum_{j=0}^{N_x-1}\underbrace{\left[ 2\sum_{k=0}^{N_y-1}u_{j,k}\cos\left(\frac{\pi m}{N_x}(k+1/2)\right) \right]}_{A_j}\cos\left(\frac{\pi n}{N_y}(j+1/2)\right). \\
+&\text{DCT}_{\RII}:\phantom{Ixxx}a_{n,m} = 2\sum_{j=0}^{N_x-1}\underbrace{\left[ 2\sum_{k=0}^{N_y-1}u_{j,k}\cos\left(\frac{\pi m}{N_x}(k+1/2)\right) \right]}_{\tilde{a}_{j,m}}\cos\left(\frac{\pi n}{N_y}(j+1/2)\right). \\
 \end{align}
 
-This presentation of the transforms makes it clear that the 2D tranform is just a nested 1D transform. For the 2D DCT, the term in brackets is a 1D DCT over grid points $k$ for given $j$. This results in $A_j$, which is an array with elements corresponding to $m=0,\,\ldots,\,N_y-1$, for each $j$. That is, $A$ is a matrix with elements $A_{j,m}$. The outer sum is also a 13 DCT over grid points $j$ for each $m$.
+This presentation of the transforms makes it clear that the 2D tranform is just a nested 1D transform. For the 2D DCT, the term in brackets is a 1D DCT over grid points $k$ for given $j$. This results in $\tilde{a}_{j,m}$, which is a matrix with elements corresponding to $m=0,\,\ldots,\,N_y-1$, for each $j$. The tilde indicates that we are almost to $a$, but not quite. We've converted the $y$-direction ($k$ index) to $m$, but have not yet converted the $x$-direction ($j$ index) to $n$. The outer sum is also a 1D DCT over grid points $j$ for each $m$, and results in $a_{n,m}$.
 
 The Type-I cosine transforms (for the extrema grid) in two dimensions are given by
 
 \begin{align}
 &\text{IDCT}_{\RI}:\phantom{xxx}u_{j,k} = \frac{1}{N_x-1}\sum_{n=0}^{N_x-1}p_{\RI,n}\left[ \frac{1}{N_y-1}\sum_{m=0}^{N_y-1}p_{\RI,m}a_{n,m}\cos\left(\frac{\pi mk}{N_x-1}\right) \right]\cos\left(\frac{\pi nj}{N_y-1}\right), \\
-&\text{DCT}_{\RI}:\phantom{Ixxx}a_{n,m} = 2\sum_{j=0}^{N_x-1}\underbrace{\left[ 2\sum_{k=0}^{N_y-1}u_{j,k}\cos\left(\frac{\pi mk}{N_x-1}\right) \right]}_{A_j}\cos\left(\frac{\pi nj}{N_y-1}\right). \\
+&\text{DCT}_{\RI}:\phantom{Ixxx}a_{n,m} = 2\sum_{j=0}^{N_x-1}\underbrace{\left[ 2\sum_{k=0}^{N_y-1}u_{j,k}\cos\left(\frac{\pi mk}{N_x-1}\right) \right]}_{\tilde{a}_{j,m}}\cos\left(\frac{\pi nj}{N_y-1}\right). \\
 \end{align}
 
 ```{python}

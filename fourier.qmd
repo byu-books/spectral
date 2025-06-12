@@ -374,7 +374,7 @@ where $\theta = 2\pi ij/N$. As before, the exponential terms are points in the c
 
 ![](figs/shift.png){width=600}
 
-Note that the same points appear on the circle for both index sets. For the sums to be equal, the same complex coefficients need to multiply the same points on the unit circle. Hence, we have $c_{-2}=\hat{c}_4$, $c_{-2}=\hat{c}_4$, $c_{-1}=\hat{c}_5$, $c_{0}=\hat{c}_0$, $c_{1}=\hat{c}_1$, $c_{2}=\hat{c}_2$, $c_{3}=\hat{c}_3$. 
+Note that the same points appear on the circle for both index sets. For the sums to be equal, the same complex coefficients need to multiply the same points on the unit circle. Hence, we have $c_{-2}=\hat{c}_4$, $c_{-1}=\hat{c}_5$, $c_{0}=\hat{c}_0$, $c_{1}=\hat{c}_1$, $c_{2}=\hat{c}_2$, $c_{3}=\hat{c}_3$. 
 
 For other values of $j$, the points on the unit circle are the same as those shown in @fig-basis2
 
@@ -608,20 +608,20 @@ The IDFT and DFT are given by
 $$\text{IDFT:}\phantom{xxx}u_{j,k} = \sum_{n=-N_n/2+1}^{N_n/2}\left[ \sum_{m=-N_m/2+1}^{N_m/2} c_{n,m}e^{2\pi imy_k/L_y}\right] e^{2\pi inx_j/L_x},$$
 
 $$
-\text{DFT:}\phantom{Ixxx}c_{n,m} = \frac{1}{N_x}\sum_{j=0}^{N_x-1}\underbrace{\left[ \frac{1}{N_y} \sum_{k=0}^{N_y-1} u_{j,k}e^{-2\pi imy_k/L_y} \right]}_{A_j} e^{-2\pi inx_j/L_x}. $$ {#eq-dft2D}
+\text{DFT:}\phantom{Ixxx}c_{n,m} = \frac{1}{N_x}\sum_{j=0}^{N_x-1}\underbrace{\left[ \frac{1}{N_y} \sum_{k=0}^{N_y-1} u_{j,k}e^{-2\pi imy_k/L_y} \right]}_{\tilde{c}_{j,m}} e^{-2\pi inx_j/L_x}. $$ {#eq-dft2D}
 
-Note, $N_n=N_x$, and $N_m=N_y$. The term in brackets and $A_j$ are defined to facilitate the presentation and computation. We recognize the term in brackets in the DFT as a one-dimensional DFT in the y-direction, operating on the row $u_{j,k}$ for given $j$. Each $A_j$ is an array with elements corresponding to $m=-N_m/2+1,\ldots,N_m/2$. Hence, $A$ is a matrix with elements $A_{j,m}$ (rows $j$ and columns $m$). The outer sum is also a one-dimensional DFT operating on columns of $A_{j,m}$ for each $m$.
+Note, $N_n=N_x$, and $N_m=N_y$. The term in brackets and $\tilde{c}_{j,m}$ are defined to facilitate the presentation and computation. We recognize the term in brackets in the DFT as a one-dimensional DFT in the y-direction, operating on the row $u_{j,k}$ for given $j$. $\tilde{c}_{j,m}$ is a matrix with elements corresponding to $m=-N_m/2+1,\ldots,N_m/2$ for each $j$. The outer sum is also a one-dimensional DFT operating on columns of $\tilde{c}_{j,m}$ for each $m$, resulting in $c_{n,m}$.
 
 In Python, $c_{n,m}$ is computed as:
 ```{python}
 #| echo: true
 #| eval: false
 for j in range(Nx):
-    A[j,:] = fft(u[j,:])
+    ctilde[j,:] = fft(u[j,:])
 for m in range(Nm):
-    c[:,m] = fft(a([:,m]))
+    c[:,m] = fft(ctilde([:,m]))
 ```
-We don't need an intermediate matrix $A$, rather, $c$ can be computed \emph{in place}. The code for the transforms is given below and compared with the two-dimensional transform available directly in ths `scipy.fft` module. Note that the loops are the same between the DFT and the IDFT, except for notation, and trading `dft` and `idft`, as well as $c$ and $u$. 
+We don't need an intermediate matrix $\tilde{c}$, rather, $c$ can be computed \emph{in place}. The code for the transforms is given below and compared with the two-dimensional transform available directly in ths `scipy.fft` module. Note that the loops are the same between the DFT and the IDFT, except for notation, and trading `dft` and `idft`, as well as $c$ and $u$. 
 
 ```{python}
 #| echo: true
@@ -716,7 +716,7 @@ $$
 \frac{\partial u_{j,k}}{\partial x} = \frac{1}{N_xN_y}\sum_n\frac{2\pi i n}{L_x}e^{2\pi inx_j/L_x}\sum_J\sum_K u_{J,K}e^{-2\pi inx_J/L_x}\sum_me^{2\pi i\frac{m}{N_y}(k-K)},
 $$
 
-where we have reordered the summations and terms, and used $y_k/L_y=k/N_y$ (and similarly for $K$). The sum on the far right is $N_y$ when $k=K$ and zero otherwise. This cancels with the leading $1/N_y$ factor and the sum over $K$ becomes a single term for $k$. Rearranging gives 
+where we have reordered the summations and terms, and used $x_j/L_x=j/N_x$, $y_k/L_y=k/N_y$. The sum on the far right is $N_y$ when $k=K$ and zero otherwise. This cancels with the leading $1/N_y$ factor and the sum over $K$ becomes a single term for $k$. Rearranging gives 
 
 $$
 \frac{\partial u_{j,k}}{\partial x} = \sum_{n=-N/2+1}^{N_x/2}\frac{2\pi i n}{L_x}\left[\frac{1}{N_x}\sum_{J=0}^{N_x-1}u_{J,k}e^{-2\pi inx_J/L_x}\right]e^{2\pi inx_j/L_x}.
